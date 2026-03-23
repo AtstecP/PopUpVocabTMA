@@ -1,23 +1,64 @@
 import React, { useState } from 'react';
 
-export default function Typing({ word, onAnswer }) {
+export default function Typing({ word, image, checkAnswer, speakText, language, feedback, failedAttempts, setFeedback, onNext }) {
   const [input, setInput] = useState('');
 
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      checkAnswer(input);
+      setInput(''); 
+    }
+  };
+
   const handleSubmit = () => {
-    onAnswer(input.toLowerCase().trim() === word.en.toLowerCase());
+    checkAnswer(input);
     setInput('');
   };
 
   return (
     <div className="exercise-container">
-      <h3>Type the English for:</h3>
-      <h2 className="target-word">{word.fr}</h2>
-      <input 
-        value={input} 
-        onChange={(e) => setInput(e.target.value)}
-        placeholder="Type here..."
-      />
-      <button className="submit-btn" onClick={handleSubmit}>Submit</button>
+      <div className="exercise-box">
+        
+        {/* 1. Image is now INSIDE the exercise-box */}
+        {image && (
+          <div className="embedded-image-container">
+            <img src={image} alt="vocabulary visual" className="word-image" />
+          </div>
+        )}
+
+        <h3>Type the word for:</h3>
+        <div className="target-word-container">
+          <div className="target-word">{word.definition}</div>
+          <button className="sound-btn small" onClick={() => speakText(word.definition, 'en')}>🔊</button>
+        </div>
+
+        {feedback === 'show-answer' ? (
+          <div className="reveal-section">
+            <p>The answer is:</p>
+            <div className="target-word-container">
+              <strong>{word.word}</strong>
+              <button className="sound-btn" onClick={() => speakText(word.word, language)}>🔊</button>
+            </div>
+            <button className="submit-btn" onClick={onNext}>Next Word</button>
+          </div>
+        ) : (
+          <>
+            <input
+              autoFocus
+              type="text"
+              className="typing-input"
+              placeholder="Type the word..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+            />
+            <button className="submit-btn" onClick={handleSubmit}>Submit</button>
+            {failedAttempts > 0 && (
+              <button className="reveal-btn" onClick={() => setFeedback('show-answer')}>Reveal Answer</button>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

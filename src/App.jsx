@@ -1,16 +1,20 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import koalaImg from './assets/koala.png'
 import './App.css'
+import Flashcard from './components/Flashcard';
+import Quiz from './components/Quiz';
+import Typing from './components/Typing';
+
 
 function App() {
   // --- TELEGRAM INIT ---
   const tg = window.Telegram?.WebApp;
   const tgUser = tg?.initDataUnsafe?.user;
-  
+
   const userName = tgUser?.first_name || 'Student';
   const userPhoto = tgUser?.photo_url || koalaImg;
   // Grab the unique Telegram ID (fallback to 12345 for local browser testing)
-  const tgId = tgUser?.id || 12345; 
+  const tgId = tgUser?.id || 12345;
 
   useEffect(() => {
     if (tg) {
@@ -25,10 +29,10 @@ function App() {
 
   const [allWords, setAllWords] = useState([]);
   const [language, setLanguage] = useState('fr');
-  
+
   // Settings State
   const [autoPlaySound, setAutoPlaySound] = useState(true);
-  
+
   // Loading States
   const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [loadingWords, setLoadingWords] = useState(true);
@@ -51,7 +55,7 @@ function App() {
   // --- 2. FETCH WORDS (Only after settings are loaded) ---
   useEffect(() => {
     if (!settingsLoaded) return;
-    
+
     setLoadingWords(true);
     fetch(`/api/words?lang=${language}`)
       .then(res => res.json())
@@ -121,6 +125,29 @@ function App() {
 
   const sessionWords = allWords.filter(w => w.category === selectedCategory);
   const currentWord = sessionWords[currentIndex];
+
+
+  const [currentImage, setCurrentImage] = useState(null);
+  const [imageLoading, setImageLoading] = useState(false);
+
+  // NEW: Fetch Image automatically when the word changes
+  useEffect(() => {
+    if (view === 'study' && currentWord) {
+      setCurrentImage(null);
+      setImageLoading(true);
+
+      // We pass both the French word (for the DB search) and English definition (for the Pixabay search)
+      fetch(`/api/image?word=${encodeURIComponent(currentWord.word)}&search_term=${encodeURIComponent(currentWord.definition)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.image_url) {
+            setCurrentImage(data.image_url);
+          }
+          setImageLoading(false);
+        })
+        .catch(() => setImageLoading(false));
+    }
+  }, [currentWord, view]);
 
   // --- TEXT TO SPEECH ENGINE ---
   const speakText = (text, langCode) => {
@@ -307,82 +334,46 @@ function App() {
 
           {/* 1. FLASHCARD EXERCISE */}
           {exerciseType === 'flashcard' && (
-            <div className="exercise-box card-mode" onClick={() => setFeedback('show-answer')}>
-              <div className="target-word-container">
-                <div className="target-word">{currentWord.word}</div>
-                <button className="sound-btn" onClick={(e) => { e.stopPropagation(); speakText(currentWord.word, language); }}>🔊</button>
-              </div>
-
-              {feedback === 'show-answer' && (
-                <div className="target-word-container answer-text-container">
-                  <div className="answer-text">{currentWord.definition}</div>
-                  <button className="sound-btn small" onClick={(e) => { e.stopPropagation(); speakText(currentWord.definition, 'en'); }}>🔊</button>
-                </div>
-              )}
-
-              <p className="hint">Tap to flip</p>
-              {feedback === 'show-answer' && <button className="submit-btn" onClick={(e) => { e.stopPropagation(); handleNext() }}>Got it!</button>}
-            </div>
+            <Flashcard
+              word={currentWord}
+              image={currentImage}
+              onNext={handleNext}
+              speakText={speakText}
+              language={language}
+            />
           )}
 
           {/* 2. QUIZ EXERCISE */}
           {exerciseType === 'quiz' && (
-            <div className="exercise-box">
-              <h3>What is the word for:</h3>
-              <div className="target-word-container">
-                <div className="target-word">{currentWord.definition}</div>
-                <button className="sound-btn small" onClick={() => speakText(currentWord.definition, 'en')}>🔊</button>
-              </div>
-
-              {feedback === 'show-answer' ? (
-                <div className="reveal-section">
-                  <p>The answer is:</p>
-                  <div className="target-word-container">
-                    <strong>{currentWord.word}</strong>
-                    <button className="sound-btn" onClick={() => speakText(currentWord.word, language)}>🔊</button>
-                  </div>
-                  <button className="submit-btn" onClick={handleNext}>Next Word</button>
-                </div>
-              ) : (
-                <>
-                  <div className="options-grid">
-                    {quizOptions.map(opt => (
-                      <button key={opt} className="option-btn" onClick={() => checkAnswer(opt)}>{opt}</button>
-                    ))}
-                  </div>
-                  {failedAttempts > 0 && <button className="reveal-btn" onClick={() => setFeedback('show-answer')}>Reveal Answer</button>}
-                </>
-              )}
-            </div>
+            <Quiz
+              word={currentWord}
+              image={currentImage}
+              options={quizOptions}
+              checkAnswer={checkAnswer}
+              speakText={speakText}
+              language={language}
+              feedback={feedback}
+              failedAttempts={failedAttempts}
+              setFeedback={setFeedback}
+              onNext={handleNext}
+            />
           )}
 
           {/* 3. TYPING EXERCISE */}
           {exerciseType === 'typing' && (
-            <div className="exercise-box">
-              <h3>Type the word for:</h3>
-              <div className="target-word-container">
-                <div className="target-word">{currentWord.definition}</div>
-                <button className="sound-btn small" onClick={() => speakText(currentWord.definition, 'en')}>🔊</button>
-              </div>
-
-              {feedback === 'show-answer' ? (
-                <div className="reveal-section">
-                  <p>The answer is:</p>
-                  <div className="target-word-container">
-                    <strong>{currentWord.word}</strong>
-                    <button className="sound-btn" onClick={() => speakText(currentWord.word, language)}>🔊</button>
-                  </div>
-                  <button className="submit-btn" onClick={handleNext}>Next Word</button>
-                </div>
-              ) : (
-                <>
-                  <input autoFocus type="text" className="typing-input" placeholder="Type the word..." onKeyDown={(e) => e.key === 'Enter' && checkAnswer(e.target.value)} />
-                  <button className="submit-btn" onClick={(e) => checkAnswer(e.target.previousSibling.value)}>Submit</button>
-                  {failedAttempts > 0 && <button className="reveal-btn" onClick={() => setFeedback('show-answer')}>Reveal Answer</button>}
-                </>
-              )}
-            </div>
+            <Typing
+              word={currentWord}
+              image={currentImage}
+              checkAnswer={checkAnswer}
+              speakText={speakText}
+              language={language}
+              feedback={feedback}
+              failedAttempts={failedAttempts}
+              setFeedback={setFeedback}
+              onNext={handleNext}
+            />
           )}
+
 
           {/* Feedback Overlay */}
           {feedback === 'correct' && <div className="feedback correct">✅ Correct!</div>}

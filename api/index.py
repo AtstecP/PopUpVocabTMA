@@ -1,14 +1,17 @@
+import os
+import httpx
+import urllib.parse
 from fastapi import FastAPI, HTTPException
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel
 from typing import List, Optional
-import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
 app = FastAPI()
 
+PIXABAY_API_KEY = os.environ.get("PIXABAY_API_KEY")
 MONGO_URL = os.environ.get("MONGODB_URI")
 client = AsyncIOMotorClient(MONGO_URL)
 db = client.tma_vocab_db
@@ -62,3 +65,34 @@ async def update_user(settings: UserSettings):
         upsert=True
     )
     return {"status": "success"}
+
+@app.get("/api/image")
+async def get_image(word: str, search_term: str):
+    # 1. Check if we already saved the image URL in our database
+    word_doc = await db.vocabulary.find_one({"word": word})
+    
+    if word_doc and word_doc.get("image_url"):
+        return {"image_url": word_doc["image_url"]}
+        
+    # 2. If no API key is found, safely return null
+    if not PIXABAY_API_KEY:
+        return {"image_url": None}
+
+    # 3. Call Pixabay. We use the English definition because Pixabay searches better in English!
+    async with httpx.AsyncClient() as client:
+        url = f"https://pixabay.com/api/?key={PIXABAY_API_KEY}&q={urllib.parse.quote(search_term)}&image_type=photo&orientation=horizontal&per_page=3"
+        response = await client.get(url)
+        data = response.json()
+        
+        if data.get("hits") and len(data["hits"]) > 0:
+            # Grab the first image result
+            img_url = data["hits"][0]["webformatURL"]
+            
+            # Save it to MongoDB so we NEVER have to ask Pixabay for this word again
+            await db.vocabulary.update_one(
+                {"word": word},
+                {"$set": {"image_url": img_url}}
+            )
+            return {"image_url": img_url}
+            
+    return {"image_url": None}
