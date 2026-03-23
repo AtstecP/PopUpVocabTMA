@@ -15,9 +15,9 @@ with open('french_vocab.json', 'r', encoding='utf-8') as f:
 formatted_words = []
 for fr_word, details in data.items():
     formatted_words.append({
-        "fr": fr_word,
-        "en": details.get("definition"),
-        "category": "General", # You can manually edit these later
+        "word": fr_word,            # CHANGED from "fr"
+        "definition": details.get("definition"), # CHANGED from "en"
+        "category": details.get("category", "General"), 
         "language": "fr",
         "level": "A1"
     })

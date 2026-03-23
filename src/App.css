@@ -356,7 +356,8 @@ body {
   align-items: center;
   justify-content: center; 
   text-align: center;
-  padding: 40px 20px 30px 20px; 
+  padding: 30px 20px 20px 20px;
+  gap: 1.2vh;
   width: 100%;
   position: relative; /* Essential for the top-right sound button */
   
@@ -531,7 +532,7 @@ body {
   background: var(--btn-gradient); 
   color: white;
   border: none;
-  padding: 18px 30px;
+  padding: 16px 30px;
   border-radius: 20px;
   font-size: 1.1rem;
   font-weight: 800;
@@ -541,6 +542,8 @@ body {
   width: 100%;
   box-shadow: var(--btn-glow);
   transition: transform 0.2s, box-shadow 0.2s;
+  margin-top: 5px; 
+  margin-bottom: 15px; /* Pushes it away from the keyboard/bottom edge */
 }
 .submit-btn:active { 
   transform: scale(0.95); 

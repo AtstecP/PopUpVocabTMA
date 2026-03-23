@@ -117,7 +117,9 @@ function App() {
 
   const getCategoryStyle = (catName) => {
     const styles = {
+      // Your Existing Icons
       'Food': { icon: '🍎', type: 'light-orange' },
+      'Food Advanced': { icon: '🐟', type: 'light-orange' },
       'School': { icon: '📚', type: 'light-blue' },
       'Magasin': { icon: '🛍️', type: 'light-grey' },
       'Work': { icon: '💼', type: 'light-green' },
@@ -126,6 +128,13 @@ function App() {
       'Philosophy': { icon: '🤔', type: 'light-orange' },
       'Art': { icon: '🎨', type: 'light-grey' },
       'Science': { icon: '🔬', type: 'light-green' },
+      'Home': { icon: '🏠', type: 'light-blue' },
+      'Travel': { icon: '✈️', type: 'light-green' },
+      'Exam': { icon: '📝', type: 'light-grey' },
+      'Celpip Advice': { icon: '🇨🇦', type: 'light-orange' }, // Canadian flag icon for Celpip
+      'Advice': { icon: '💡', type: 'light-orange' },
+      'Workplace': { icon: '🏢', type: 'light-green' },
+      'Advanced': { icon: '🚀', type: 'light-blue' },
     };
     return styles[catName] || { icon: '📁', type: 'light-grey' };
   };
