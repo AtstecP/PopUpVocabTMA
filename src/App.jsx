@@ -5,9 +5,18 @@ import './App.css'
 function App() {
   const [view, setView] = useState('dashboard');
   const [selectedCategory, setSelectedCategory] = useState(null);
-  
+  const tg = window.Telegram?.WebApp;
+  const userName = tg?.initDataUnsafe?.user?.first_name || 'Student'; // Fallback if opened in a normal browser
+
+  useEffect(() => {
+    if (tg) {
+      tg.ready(); // Tells Telegram the app is loaded
+      tg.expand(); // Forces the app to take up the full screen height
+    }
+  }, []);
+
   const [allWords, setAllWords] = useState([]);
-  const [language, setLanguage] = useState('fr'); 
+  const [language, setLanguage] = useState('fr');
   const [loading, setLoading] = useState(true);
 
   // --- 1. FETCH FROM DATABASE ---
@@ -27,7 +36,7 @@ function App() {
 
   // --- 2. DYNAMIC CATEGORIES ---
   const uniqueCategoryNames = [...new Set(allWords.map(w => w.category))];
-  
+
   const getCategoryStyle = (catName) => {
     const styles = {
       'Food': { icon: '🍎', type: 'light-orange' },
@@ -56,8 +65,8 @@ function App() {
 
   // --- 3. STUDY SESSION STATE ---
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [exerciseType, setExerciseType] = useState('flashcard'); 
-  const [feedback, setFeedback] = useState(null); 
+  const [exerciseType, setExerciseType] = useState('flashcard');
+  const [feedback, setFeedback] = useState(null);
   const [failedAttempts, setFailedAttempts] = useState(0);
 
   const sessionWords = allWords.filter(w => w.category === selectedCategory);
@@ -67,23 +76,23 @@ function App() {
   // This automatically generates 3 wrong answers from the same category
   const quizOptions = useMemo(() => {
     if (!currentWord || !sessionWords) return [];
-    
+
     // Get other words from the same category
     const others = sessionWords.filter(w => w.word !== currentWord.word);
     const shuffledOthers = others.sort(() => 0.5 - Math.random()).slice(0, 3).map(w => w.word);
-    
+
     // If category has < 4 words, add safe fallbacks
-    const fallbacks = language === 'fr' 
-      ? ['Chat', 'Chien', 'Maison', 'Voiture', 'Livre'] 
+    const fallbacks = language === 'fr'
+      ? ['Chat', 'Chien', 'Maison', 'Voiture', 'Livre']
       : ['Cat', 'Dog', 'House', 'Car', 'Book'];
-    
+
     while (shuffledOthers.length < 3) {
       const fallback = fallbacks.pop();
       if (fallback !== currentWord.word && !shuffledOthers.includes(fallback)) {
         shuffledOthers.push(fallback);
       }
     }
-    
+
     // Combine correct answer with wrong answers and shuffle
     return [currentWord.word, ...shuffledOthers].sort(() => 0.5 - Math.random());
   }, [currentWord, sessionWords, language]);
@@ -99,20 +108,20 @@ function App() {
 
   const handleNext = () => {
     setFeedback(null);
-    setFailedAttempts(0); 
+    setFailedAttempts(0);
     if (currentIndex < sessionWords.length - 1) {
       setCurrentIndex(currentIndex + 1);
       const types = ['flashcard', 'quiz', 'typing'];
       setExerciseType(types[Math.floor(Math.random() * types.length)]);
     } else {
-      setView('dashboard'); 
+      setView('dashboard');
     }
   };
 
   // --- 4. UPDATED VALIDATION LOGIC ---
   const checkAnswer = (answer) => {
-    if (!answer) return; 
-    
+    if (!answer) return;
+
     // Compare answer to the WORD (French) instead of the DEFINITION (English)
     if (answer.toLowerCase().trim() === currentWord.word.toLowerCase()) {
       setFeedback('correct');
@@ -120,14 +129,14 @@ function App() {
     } else {
       setFeedback('wrong');
       setFailedAttempts(prev => prev + 1);
-      
+
       setTimeout(() => {
         setFeedback(prev => prev === 'wrong' ? null : prev);
       }, 1000);
     }
   };
 
-  if (loading) return <div className="app-container"><h2 style={{marginTop: '50px', textAlign: 'center'}}>Loading Words...</h2></div>;
+  if (loading) return <div className="app-container"><h2 style={{ marginTop: '50px', textAlign: 'center' }}>Loading Words...</h2></div>;
 
   return (
     <div className="app-container">
@@ -139,14 +148,14 @@ function App() {
               <img src={koalaImg} alt="User" className="avatar" />
               <div className="welcome-text">
                 <span>Learning {language === 'fr' ? 'French' : 'English'}</span>
-                <strong>Alex</strong>
+                <strong>{userName}</strong>
               </div>
             </div>
             <button className="lang-toggle-btn" onClick={() => setLanguage(language === 'fr' ? 'en' : 'fr')}>
               {language === 'fr' ? '🇫🇷' : '🇬🇧'}
             </button>
           </header>
-          
+
           <h2>Choose a category</h2>
           <div className="category-list">
             {categories.map(cat => (
@@ -187,11 +196,11 @@ function App() {
               <h3>What is the word for:</h3>
               {/* Show the Definition as the prompt */}
               <div className="target-word">{currentWord.definition}</div>
-              
+
               {feedback === 'show-answer' ? (
                 <div className="reveal-section">
                   {/* Reveal the actual Word */}
-                  <p>The answer is: <br/><strong>{currentWord.word}</strong></p>
+                  <p>The answer is: <br /><strong>{currentWord.word}</strong></p>
                   <button className="submit-btn" onClick={handleNext}>Next Word</button>
                 </div>
               ) : (
@@ -214,13 +223,13 @@ function App() {
               <h3>Type the word for:</h3>
               {/* Show the Definition as the prompt */}
               <div className="target-word">{currentWord.definition}</div>
-              
+
               {feedback === 'show-answer' ? (
-                 <div className="reveal-section">
-                 {/* Reveal the actual Word */}
-                 <p>The answer is: <br/><strong>{currentWord.word}</strong></p>
-                 <button className="submit-btn" onClick={handleNext}>Next Word</button>
-               </div>
+                <div className="reveal-section">
+                  {/* Reveal the actual Word */}
+                  <p>The answer is: <br /><strong>{currentWord.word}</strong></p>
+                  <button className="submit-btn" onClick={handleNext}>Next Word</button>
+                </div>
               ) : (
                 <>
                   <input
