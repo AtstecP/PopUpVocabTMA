@@ -32,3 +32,30 @@
 }
 .feedback.correct { background: #48bb78; }
 .feedback.wrong { background: #f56565; }
+
+.lang-toggle-btn {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 16px; /* Slightly rounder */
+  padding: 12px 16px; /* Bigger touch target */
+  font-size: 2rem; /* Massive emoji */
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05); /* Nice soft shadow */
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lang-toggle-btn:active {
+  transform: scale(0.92); /* Satisfying click effect */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* Ensure the avatar stays round if Telegram sends a square image */
+.avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+}

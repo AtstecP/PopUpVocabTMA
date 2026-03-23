@@ -6,12 +6,15 @@ function App() {
   const [view, setView] = useState('dashboard');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const tg = window.Telegram?.WebApp;
-  const userName = tg?.initDataUnsafe?.user?.first_name || 'Student'; // Fallback if opened in a normal browser
+  const tgUser = tg?.initDataUnsafe?.user;
+
+  const userName = tgUser?.first_name || 'Student'; // Fallback if opened in a normal browser
+  const userPhoto = tgUser?.photo_url || koalaImg;
 
   useEffect(() => {
     if (tg) {
-      tg.ready(); // Tells Telegram the app is loaded
-      tg.expand(); // Forces the app to take up the full screen height
+      tg.ready();
+      tg.expand();
     }
   }, []);
 
@@ -145,12 +148,14 @@ function App() {
         <>
           <header className="header">
             <div className="user-profile">
-              <img src={koalaImg} alt="User" className="avatar" />
+              {/* Update the src right here: */}
+              <img src={userPhoto} alt="User" className="avatar" />
               <div className="welcome-text">
                 <span>Learning {language === 'fr' ? 'French' : 'English'}</span>
                 <strong>{userName}</strong>
               </div>
             </div>
+
             <button className="lang-toggle-btn" onClick={() => setLanguage(language === 'fr' ? 'en' : 'fr')}>
               {language === 'fr' ? '🇫🇷' : '🇬🇧'}
             </button>
