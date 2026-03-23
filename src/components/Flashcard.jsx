@@ -18,13 +18,13 @@ export default function Flashcard({ word, image, onNext, speakText, language }) 
 
   return (
     <div className="exercise-container">
-      
+
       <div className="flashcard-scene" onClick={handleFlip}>
         <div className={`flashcard-inner ${flipped ? 'flipped' : ''}`}>
-          
+
           {/* FRONT */}
           <div className="card-face card-front">
-            
+
             {/* The image is now INSIDE the card with the correct square CSS class */}
             {image && (
               <div className="embedded-image-container">
@@ -41,9 +41,9 @@ export default function Flashcard({ word, image, onNext, speakText, language }) 
 
           {/* BACK */}
           <div className="card-face card-back">
+            <button className="sound-btn small" onClick={(e) => { e.stopPropagation(); speakText(word.definition, 'en'); }}>🔊</button>
             <div className="target-word-container">
               <div className="answer-text">{word.definition}</div>
-              <button className="sound-btn small" onClick={(e) => { e.stopPropagation(); speakText(word.definition, 'en'); }}>🔊</button>
             </div>
           </div>
 

@@ -6,7 +6,7 @@ export default function Typing({ word, image, checkAnswer, speakText, language, 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
       checkAnswer(input);
-      setInput(''); 
+      setInput('');
     }
   };
 
@@ -18,7 +18,8 @@ export default function Typing({ word, image, checkAnswer, speakText, language, 
   return (
     <div className="exercise-container">
       <div className="exercise-box">
-        
+        <button className="sound-btn small" onClick={() => speakText(word.definition, 'en')}>🔊</button>
+
         {/* 1. Image is now INSIDE the exercise-box */}
         {image && (
           <div className="embedded-image-container">
@@ -29,7 +30,6 @@ export default function Typing({ word, image, checkAnswer, speakText, language, 
         <h3>Type the word for:</h3>
         <div className="target-word-container">
           <div className="target-word">{word.definition}</div>
-          <button className="sound-btn small" onClick={() => speakText(word.definition, 'en')}>🔊</button>
         </div>
 
         {feedback === 'show-answer' ? (

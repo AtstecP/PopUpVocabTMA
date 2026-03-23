@@ -4,7 +4,8 @@ export default function Quiz({ word, image, options, checkAnswer, speakText, lan
   return (
     <div className="exercise-container">
       <div className="exercise-box">
-        
+        <button className="sound-btn small" onClick={() => speakText(word.definition, 'en')}>🔊</button>
+
         {/* 1. Image is now INSIDE the exercise-box */}
         {image && (
           <div className="embedded-image-container">
@@ -15,7 +16,6 @@ export default function Quiz({ word, image, options, checkAnswer, speakText, lan
         <h3>What is the word for:</h3>
         <div className="target-word-container">
           <div className="target-word">{word.definition}</div>
-          <button className="sound-btn small" onClick={() => speakText(word.definition, 'en')}>🔊</button>
         </div>
 
         {feedback === 'show-answer' ? (
