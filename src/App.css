@@ -1,250 +1,322 @@
+/* =========================================
+   1. VARIABLES & RESET
+   ========================================= */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+
 :root {
-  /* Your specific background color */
-  --bg-color: #cde9fe;
+  /* Core Colors */
+  --bg-color: #e3e1e4; 
+  --text-main: #2b174d; 
+  --text-grey: #9b93a8;
   
-  /* Semi-transparent card colors that pop against the background */
-  --card-bg-sports: rgba(238, 251, 255, 0.95);
-  --card-bg-food: rgba(255, 251, 240, 0.95);
-  --card-bg-work: rgba(240, 253, 246, 0.95);
-  --card-bg-custom: rgba(245, 245, 245, 0.95);
+  /* Gradients & Accents */
+  --accent-purple: #ae47ff;
+  --accent-blue: #4a90e2;
+  --btn-gradient: linear-gradient(135deg, #c466ff 0%, #992bff 100%);
+  --btn-glow: 0 10px 25px rgba(174, 71, 255, 0.4);
   
-  /* Text and accent colors adjusted for better contrast */
-  --text-main: #2a3b4e;
-  --text-grey: #6b7a8d; /* Darkened slightly */
-  --accent-blue: #ffffff; /* Bolt icon container color */
-  --bolt-color: #a3dafb;
-  --nav-active: #4a90e2;
-  --shadow-soft: 0 4px 15px rgba(0,0,0,0.06);
+  /* Shadows */
+  --shadow-card: 0 8px 16px rgba(43, 23, 77, 0.03);
 }
 
-/* --- SCROLLBAR HIDING MAGIC --- */
-/* Hide scrollbar for Chrome, Safari and Opera */
-*::-webkit-scrollbar {
-  display: none;
-}
-/* Hide scrollbar for IE, Edge and Firefox */
 * {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  box-sizing: border-box;
 }
-/* ------------------------------- */
+
+/* Hide scrollbars but keep scrolling */
+*::-webkit-scrollbar { display: none; }
+* { -ms-overflow-style: none; scrollbar-width: none; }
 
 body {
   background-color: var(--bg-color);
   color: var(--text-main);
   margin: 0;
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: 'Poppins', sans-serif; 
   min-height: 100vh;
 }
 
 .app-container {
   max-width: 400px;
   margin: 0 auto;
-  padding: 30px 20px 100px 20px; /* Increased top and bottom padding */
+  padding: 30px 20px 100px 20px;
 }
 
-.header {
+.scrollable-content {
+  height: calc(100vh - 80px); 
+  overflow-y: auto;
+  padding-bottom: 20px;
+}
+
+/* =========================================
+   2. TYPOGRAPHY & HEADERS
+   ========================================= */
+.modern-dashboard { padding-top: 20px; }
+
+/* --- MODERN HEADER & AVATAR --- */
+.modern-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 40px; /* More space before heading */
+  gap: 15px; /* Space between avatar and text */
+  margin-bottom: 25px;
 }
 
-.user-profile {
-  display: flex;
-  gap: 15px; /* Better gap between avatar and text */
-  align-items: center;
+.modern-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin: 0; /* Margin moved to the parent header */
+  letter-spacing: -0.5px;
 }
 
-.welcome-text {
-  display: flex;
-  flex-direction: column;
-}
-
-.welcome-text span {
-  font-size: 0.95rem;
-  color: var(--text-grey);
-}
-
-.welcome-text strong {
-  font-size: 1.2rem; /* Sligthly larger name */
-  font-weight: 700;
-}
-
-.avatar {
+.modern-avatar {
   width: 55px;
   height: 55px;
   border-radius: 50%;
-  background: white;
-  padding: 5px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* Slightly stronger shadow */
+  object-fit: cover;
+  box-shadow: 0 6px 15px rgba(43, 23, 77, 0.08); /* Soft floating shadow */
+  border: 3px solid white; /* Adds a clean, premium border */
+  flex-shrink: 0; /* Prevents the image from squishing */
 }
 
-.notification-icon {
-  color: var(--bolt-color);
-  background: white;
-  padding: 12px;
-  border-radius: 50%;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-h2 {
-  font-size: 1.6rem;
-  font-weight: 700;
-  margin-bottom: 25px;
-  letter-spacing: -0.5px; /* Modern font tight spacing */
-}
-
-.category-list {
-  display: flex;
-  flex-direction: column;
-  gap: 15px; /* Consistent gap between cards */
-}
-
-.category-card {
-  padding: 25px;
-  border-radius: 20px;
+.study-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: var(--shadow-soft);
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-  border: 1px solid rgba(255,255,255,0.2); /* Subtle edge highlight */
-}
-
-.category-card:active {
-  transform: scale(0.98);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-}
-
-/* Specific card backgrounds */
-.category-card.light-blue { background-color: var(--card-bg-sports); }
-.category-card.light-orange { background-color: var(--card-bg-food); }
-.category-card.light-green { background-color: var(--card-bg-work); }
-.category-card.light-grey { background-color: var(--card-bg-custom); }
-
-.card-info h3 {
-  margin: 0;
-  font-size: 1.4rem;
-  font-weight: 700;
-}
-
-.card-info p {
-  margin: 10px 0 0;
-  color: var(--text-grey);
-  font-size: 0.95rem;
-  font-weight: 500;
-}
-
-.card-icon {
-  font-size: 2.8rem; /* Slightly larger icons */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 70px;
-  height: 70px;
-}
-
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: rgba(255,255,255,0.98); /* Near solid white */
-  display: flex;
-  justify-content: space-around;
-  padding: 18px 10px;
-  border-top-left-radius: 25px;
-  border-top-right-radius: 25px;
-  box-shadow: 0 -10px 30px rgba(0,0,0,0.06);
-  backdrop-filter: blur(10px); /* Modern blur effect */
-}
-
-.nav-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-grey);
-  cursor: pointer;
-}
-
-.nav-item.active {
-  color: var(--nav-active);
-}
-
-.nav-icon {
-  font-size: 1.4rem;
+  margin-bottom: 20px;
 }
 
 .back-btn {
   background: none;
   border: none;
-  color: var(--nav-active);
-  font-weight: bold;
+  color: var(--accent-blue);
+  font-weight: 700;
   font-size: 1.1rem;
   cursor: pointer;
-  margin-bottom: 20px;
   padding: 0;
 }
 
-.word-items {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.progress-text {
+  color: var(--text-grey);
+  font-weight: 600;
+  font-size: 0.9rem;
 }
 
-.word-card {
+/* =========================================
+   3. DASHBOARD WIDGETS
+   ========================================= */
+.stats-grid {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.stat-card {
+  flex: 1;
   background: white;
-  padding: 15px 20px;
-  border-radius: 15px;
+  padding: 18px;
+  border-radius: 24px;
+  box-shadow: var(--shadow-card);
+  position: relative;
+}
+
+.stat-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-grey);
+  display: block;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.stat-value strong { font-size: 1.6rem; font-weight: 800; color: var(--text-main); }
+.stat-sub { font-size: 0.75rem; color: var(--text-grey); font-weight: 600; }
+
+.progress-ring {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 4px solid #f0e6ff;
+  border-top-color: var(--accent-purple);
+  transform: rotate(45deg);
+}
+
+.calendar-strip {
   display: flex;
   justify-content: space-between;
+  margin-bottom: 30px;
+  padding: 0 5px;
+}
+
+.cal-item {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  box-shadow: var(--shadow-soft);
+  gap: 8px;
+  padding: 12px 8px;
+  border-radius: 20px;
+  position: relative;
 }
 
-.reveal-btn {
-  background: none;
-  border: none;
-  color: #e53e3e; /* A soft red/orange */
-  text-decoration: underline;
-  margin-top: 15px;
-  cursor: pointer;
-  font-weight: bold;
+.cal-item.active {
+  border: 1.5px solid #e8e6ee;
+  background: white;
+  box-shadow: var(--shadow-card);
+}
+
+.cal-day { font-size: 0.7rem; font-weight: 700; color: var(--text-grey); }
+.cal-num { font-size: 1.1rem; font-weight: 800; color: var(--text-grey); }
+.cal-item.active .cal-num { color: var(--text-main); }
+
+.cal-dot {
+  position: absolute;
+  bottom: 0px;
+  width: 4px;
+  height: 4px;
+  background: var(--accent-purple);
+  border-radius: 50%;
+}
+
+.hero-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.hero-mascot {
+  height: 130px; /* Increased from 140px */
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  margin-bottom: 20px; /* A little extra breathing room below it */
+  filter: drop-shadow(0 15px 15px rgba(0,0,0,0.1));
+  transition: transform 0.3s ease; /* Optional: smooth loading */
+}
+
+.hero-section h2 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin: 0 0 10px 0;
+}
+
+.hero-section p {
   font-size: 0.95rem;
+  color: var(--text-grey);
+  line-height: 1.5;
+  margin: 0 0 25px 0;
 }
 
-.reveal-section {
-  margin-top: 20px;
-  padding: 20px;
-  background: var(--card-bg-sports); 
-  border-radius: 15px;
+.start-now-btn {
+  background: var(--btn-gradient);
+  color: white;
+  border: none;
+  padding: 18px 45px;
+  border-radius: 30px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  box-shadow: var(--btn-glow);
+  transition: transform 0.2s;
+}
+.start-now-btn:active { transform: scale(0.95); }
+
+/* =========================================
+   4. VOCABULARY LIST TAB
+   ========================================= */
+.section-desc {
+  color: var(--text-grey);
+  font-size: 0.95rem;
+  margin-top: -15px;
+  margin-bottom: 25px;
+  font-weight: 500;
+}
+
+.modern-category-list {
   display: flex;
   flex-direction: column;
   gap: 15px;
+  padding-bottom: 40px; 
+}
+
+.modern-category-card {
+  background: white;
+  padding: 16px;
+  border-radius: 24px;
+  box-shadow: var(--shadow-card);
+  display: flex;
   align-items: center;
+  gap: 18px;
+  cursor: pointer;
+  border: 2px solid transparent;
+}
+.modern-category-card:active { transform: scale(0.97); }
+
+.card-icon-box {
+  font-size: 2rem;
+  background: var(--bg-color);
+  width: 65px;
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20px;
 }
 
-.reveal-section p {
-  margin: 0;
-  font-size: 1.1rem;
-  color: var(--text-grey);
+.card-info { flex: 1; }
+.card-info h3 { margin: 0 0 4px 0; font-size: 1.2rem; font-weight: 700; }
+.card-info p { margin: 0; color: var(--text-grey); font-size: 0.85rem; font-weight: 600; }
+.card-arrow { color: #d1cdd8; font-size: 1.2rem; font-weight: bold; padding-right: 10px; }
+
+/* =========================================
+   5. STUDY EXERCISES (Flashcard, Quiz, Typing)
+   ========================================= */
+.exercise-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
-.reveal-section strong {
-  font-size: 1.6rem;
-  color: var(--nav-active);
+/* Shared White Box for Exercises */
+.exercise-box, .card-face {
+  background: white;
+  border-radius: 24px;
+  box-shadow: var(--shadow-card);
+  border: 2px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 30px 20px;
 }
 
+.exercise-box { width: 100%; }
 
-/* --- SOUND BUTTONS --- */
+/* Image Setup */
+.embedded-image-container {
+  width: 160px;
+  height: 160px;
+  margin: 0 auto 20px auto;
+  border-radius: 20px;
+  overflow: hidden; 
+  border: 3px solid #f1f5f9;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+.word-image { width: 100%; height: 100%; object-fit: cover; }
+
+/* Text within Exercises */
 .target-word-container {
   display: flex;
   align-items: center;
@@ -252,6 +324,39 @@ h2 {
   gap: 15px;
   margin: 10px 0;
 }
+.target-word { font-size: 2.2rem; font-weight: 800; color: var(--accent-blue); margin: 0; }
+.answer-text { font-size: 1.8rem; font-weight: 600; color: var(--text-grey); font-style: italic; }
+.hint { color: var(--text-grey); font-size: 0.9rem; margin-top: 5px; }
+
+/* 3D Flashcard specific */
+.flashcard-scene {
+  width: 100%;
+  height: 400px; 
+  perspective: 1000px; 
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+.flashcard-inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+  transform-style: preserve-3d;
+}
+.flashcard-inner.flipped { transform: rotateX(180deg); }
+.card-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.card-back {
+  transform: rotateX(180deg);
+  background-color: #f8fafc;
+}
+
+/* Audio Buttons */
 .sound-btn {
   background: #f1f5f9;
   border: none;
@@ -264,25 +369,101 @@ h2 {
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 .sound-btn:active { transform: scale(0.9); background: #e2e8f0; }
 .sound-btn.small { width: 35px; height: 35px; font-size: 1rem; }
-.answer-text-container { margin-top: 10px; }
 
-/* --- SETTINGS PAGE --- */
+/* Quiz & Typing Controls */
+.exercise-box h3 { color: var(--text-grey); font-size: 1.1rem; margin-top: 0; margin-bottom: 10px; }
+.options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; margin-top: 20px; }
+.option-btn {
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  padding: 15px 10px;
+  border-radius: 15px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.option-btn:active { background: #e2e8f0; transform: scale(0.95); }
+
+.typing-input {
+  width: 90%;
+  padding: 15px;
+  margin: 20px 0;
+  border: 2px solid #e2e8f0;
+  border-radius: 15px;
+  font-size: 1.2rem;
+  text-align: center;
+  outline: none;
+  background: #f8fafc;
+  color: var(--text-main);
+  font-weight: 600;
+}
+.typing-input:focus { border-color: var(--accent-blue); background: white; }
+
+.submit-btn {
+  background: var(--accent-blue);
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 15px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
+  transition: all 0.2s;
+}
+.submit-btn:active { transform: scale(0.95); }
+
+/* Overlays & Reveal */
+.reveal-btn {
+  background: none;
+  border: none;
+  color: #e53e3e; 
+  text-decoration: underline;
+  margin-top: 15px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.95rem;
+}
+.reveal-section {
+  margin-top: 20px;
+  width: 100%;
+}
+.feedback {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 15px 30px;
+  border-radius: 30px;
+  font-weight: bold;
+  color: white;
+  z-index: 2000;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+.feedback.correct { background: #4caf50; }
+.feedback.wrong { background: #f44336; }
+
+/* =========================================
+   6. SETTINGS TAB
+   ========================================= */
 .settings-view { padding-bottom: 80px; }
 .setting-card {
   background: white;
   padding: 20px;
-  border-radius: 20px;
+  border-radius: 24px;
   margin-bottom: 15px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: var(--shadow-soft);
+  box-shadow: var(--shadow-card);
 }
-.setting-info h3 { margin: 0; font-size: 1.1rem; color: var(--text-dark); }
+.setting-info h3 { margin: 0; font-size: 1.1rem; color: var(--text-main); }
 .setting-info p { margin: 5px 0 0; font-size: 0.9rem; color: var(--text-grey); }
 .settings-select {
   padding: 10px 15px;
@@ -295,161 +476,52 @@ h2 {
   cursor: pointer;
 }
 
-/* --- TOGGLE SWITCH (iOS Style) --- */
 .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
 .switch input { opacity: 0; width: 0; height: 0; }
-.slider {
-  position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-  background-color: #ccc; transition: .4s;
-}
-.slider:before {
-  position: absolute; content: ""; height: 20px; width: 20px;
-  left: 4px; bottom: 4px; background-color: white; transition: .4s;
-}
-input:checked + .slider { background-color: var(--nav-active); }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; }
+.slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; }
+input:checked + .slider { background-color: var(--accent-purple); }
 input:checked + .slider:before { transform: translateX(22px); }
 .slider.round { border-radius: 34px; }
 .slider.round:before { border-radius: 50%; }
 
-/* --- SCROLL FIX FOR TMA --- */
-.scrollable-content {
-  height: calc(100vh - 80px); /* Leave room for bottom nav */
-  overflow-y: auto;
-  padding-bottom: 20px;
-}
-
-
-/* --- IMAGE INTEGRATION --- */
-.word-image-container {
-  width: 100%;
-  height: 160px;
-  border-radius: 15px;
-  overflow: hidden;
-  margin-bottom: 20px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-  background: #f1f5f9;
-}
-
-.word-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover; /* Keeps aspect ratio perfect without squishing */
-}
-
-.word-image-container.placeholder {
+/* =========================================
+   7. BOTTOM NAVIGATION
+   ========================================= */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #ffffff;
   display: flex;
+  justify-content: space-around;
+  padding: 20px 10px 30px 10px; 
+  border-top-left-radius: 35px;
+  border-top-right-radius: 35px;
+  box-shadow: 0 -15px 40px rgba(43, 23, 77, 0.06);
+  z-index: 1000;
+}
+.nav-item {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  gap: 6px;
+  font-size: 0.65rem; 
+  font-weight: 700;
   color: var(--text-grey);
-  font-size: 0.9rem;
-  font-weight: 500;
-  animation: pulse 1.5s infinite ease-in-out;
-}
-
-@keyframes pulse {
-  0% { opacity: 0.6; }
-  50% { opacity: 1; }
-  100% { opacity: 0.6; }
-}
-
-/* --- FLASHCARD CONTAINER --- */
-.exercise-container {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-/* --- 3D FLASHCARD ANIMATION --- */
-.flashcard-scene {
-  width: 100%;
-  height: 220px; 
-  perspective: 1000px;
   cursor: pointer;
-  margin-bottom: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.2s ease;
 }
-
-.flashcard-inner {
-  width: 100%;
-  height: 100%;
-  position: relative;
-  transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
-  transform-style: preserve-3d;
+.nav-item svg {
+  width: 24px;
+  height: 24px;
+  stroke: var(--text-grey);
+  stroke-width: 2.2;
+  fill: none;
+  transition: all 0.2s ease;
 }
-
-.flashcard-inner.flipped {
-  transform: rotateX(180deg);
-}
-
-.card-face {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  background-color: white;
-  border-radius: 20px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid #e2e8f0;
-  /* Add padding to create space for the embedded elements */
-  padding: 20px; 
-}
-
-.card-back {
-  transform: rotateX(180deg);
-  background-color: #f8fafc;
-  border-color: #cbd5e1;
-}
-
-/* --- IMAGE INSIDE CARD --- */
-/* Add this new container to style the embedded image */
-.embedded-image-container {
-  width: 100%; /* Take full width of card content area */
-  /* Make height equal to width to create a perfect square */
-  aspect-ratio: 1/1; 
-  border-radius: 15px; /* Softer rounded corners within the card */
-  overflow: hidden; /* Keep image within its square frame */
-  margin-bottom: 15px; /* Space between image and target word */
-  border: 1px solid #e2e8f0; /* Subtle border around the square image */
-}
-
-/* Existing image styles can be kept and reused */
-.word-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover; 
-}
-
-/* Remove or reuse any previous .word-image-container styles 
-   that might conflict with embedding it inside the card. */
-
-/* --- TYPOGRAPHY INSIDE CARDS --- */
-.target-word-container {
-  /* ... (Existing target word container styles can be kept) */
-}
-
-.target-word {
-  font-size: 2.2rem;
-  font-weight: 800;
-  color: #4a90e2; 
-  margin: 0;
-}
-
-.answer-text {
-  font-size: 1.8rem;
-  font-weight: 600;
-  color: #6b7a8d;
-  font-style: italic;
-}
-
-.hint {
-  color: #94a3b8;
-  font-size: 0.9rem;
-  margin-top: 5px; /* Reduce margin a bit now it's inside card */
-}
-
-.fr-word { font-weight: 700; color: var(--nav-active); }
-.en-word { color: var(--text-grey); font-style: italic; }
+.nav-item.active { color: var(--text-main); }
+.nav-item.active svg { stroke: var(--text-main); fill: rgba(43, 23, 77, 0.1); }
