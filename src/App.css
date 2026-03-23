@@ -1,0 +1,236 @@
+:root {
+  /* Your specific background color */
+  --bg-color: #cde9fe;
+  
+  /* Semi-transparent card colors that pop against the background */
+  --card-bg-sports: rgba(238, 251, 255, 0.95);
+  --card-bg-food: rgba(255, 251, 240, 0.95);
+  --card-bg-work: rgba(240, 253, 246, 0.95);
+  --card-bg-custom: rgba(245, 245, 245, 0.95);
+  
+  /* Text and accent colors adjusted for better contrast */
+  --text-main: #2a3b4e;
+  --text-grey: #6b7a8d; /* Darkened slightly */
+  --accent-blue: #ffffff; /* Bolt icon container color */
+  --bolt-color: #a3dafb;
+  --nav-active: #4a90e2;
+  --shadow-soft: 0 4px 15px rgba(0,0,0,0.06);
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  margin: 0;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  min-height: 100vh;
+}
+
+.app-container {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 30px 20px 100px 20px; /* Increased top and bottom padding */
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px; /* More space before heading */
+}
+
+.user-profile {
+  display: flex;
+  gap: 15px; /* Better gap between avatar and text */
+  align-items: center;
+}
+
+.welcome-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.welcome-text span {
+  font-size: 0.95rem;
+  color: var(--text-grey);
+}
+
+.welcome-text strong {
+  font-size: 1.2rem; /* Sligthly larger name */
+  font-weight: 700;
+}
+
+.avatar {
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  background: white;
+  padding: 5px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* Slightly stronger shadow */
+}
+
+.notification-icon {
+  color: var(--bolt-color);
+  background: white;
+  padding: 12px;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+h2 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 25px;
+  letter-spacing: -0.5px; /* Modern font tight spacing */
+}
+
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /* Consistent gap between cards */
+}
+
+.category-card {
+  padding: 25px;
+  border-radius: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: var(--shadow-soft);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid rgba(255,255,255,0.2); /* Subtle edge highlight */
+}
+
+.category-card:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+/* Specific card backgrounds */
+.category-card.light-blue { background-color: var(--card-bg-sports); }
+.category-card.light-orange { background-color: var(--card-bg-food); }
+.category-card.light-green { background-color: var(--card-bg-work); }
+.category-card.light-grey { background-color: var(--card-bg-custom); }
+
+.card-info h3 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.card-info p {
+  margin: 10px 0 0;
+  color: var(--text-grey);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.card-icon {
+  font-size: 2.8rem; /* Slightly larger icons */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 70px;
+  height: 70px;
+}
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255,255,255,0.98); /* Near solid white */
+  display: flex;
+  justify-content: space-around;
+  padding: 18px 10px;
+  border-top-left-radius: 25px;
+  border-top-right-radius: 25px;
+  box-shadow: 0 -10px 30px rgba(0,0,0,0.06);
+  backdrop-filter: blur(10px); /* Modern blur effect */
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-grey);
+  cursor: pointer;
+}
+
+.nav-item.active {
+  color: var(--nav-active);
+}
+
+.nav-icon {
+  font-size: 1.4rem;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  color: var(--nav-active);
+  font-weight: bold;
+  font-size: 1.1rem;
+  cursor: pointer;
+  margin-bottom: 20px;
+  padding: 0;
+}
+
+.word-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.word-card {
+  background: white;
+  padding: 15px 20px;
+  border-radius: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: var(--shadow-soft);
+}
+
+.reveal-btn {
+  background: none;
+  border: none;
+  color: #e53e3e; /* A soft red/orange */
+  text-decoration: underline;
+  margin-top: 15px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.95rem;
+}
+
+.reveal-section {
+  margin-top: 20px;
+  padding: 20px;
+  background: var(--card-bg-sports); 
+  border-radius: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  align-items: center;
+}
+
+.reveal-section p {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--text-grey);
+}
+
+.reveal-section strong {
+  font-size: 1.6rem;
+  color: var(--nav-active);
+}
+
+
+.fr-word { font-weight: 700; color: var(--nav-active); }
+.en-word { color: var(--text-grey); font-style: italic; }

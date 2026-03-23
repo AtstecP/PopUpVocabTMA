@@ -1,0 +1,34 @@
+.study-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.exercise-box { 
+  background: white; 
+  padding: 40px 20px; 
+  border-radius: 30px; 
+  text-align: center; 
+  box-shadow: var(--shadow-soft);
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 20px;
+}
+.target-word { font-size: 2.5rem; font-weight: 800; color: var(--nav-active); }
+.answer-text { font-size: 1.8rem; color: var(--text-grey); font-style: italic; }
+.options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+.option-btn { 
+  background: #f8fafd; border: 2px solid #e2e8f0; padding: 15px; 
+  border-radius: 15px; font-weight: 600; cursor: pointer; 
+}
+.typing-input {
+  width: 100%; padding: 15px; border-radius: 15px; border: 2px solid #e2e8f0;
+  font-size: 1.2rem; text-align: center; box-sizing: border-box;
+}
+.submit-btn {
+  background: var(--nav-active); color: white; border: none; 
+  padding: 15px 30px; border-radius: 15px; font-weight: 700; cursor: pointer;
+}
+.feedback {
+  position: fixed; top: 20%; left: 50%; transform: translateX(-50%);
+  padding: 15px 30px; border-radius: 50px; color: white; font-weight: 800;
+}
+.feedback.correct { background: #48bb78; }
+.feedback.wrong { background: #f56565; }
