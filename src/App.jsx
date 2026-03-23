@@ -6,8 +6,11 @@ function App() {
   // --- TELEGRAM INIT ---
   const tg = window.Telegram?.WebApp;
   const tgUser = tg?.initDataUnsafe?.user;
+  
   const userName = tgUser?.first_name || 'Student';
   const userPhoto = tgUser?.photo_url || koalaImg;
+  // Grab the unique Telegram ID (fallback to 12345 for local browser testing)
+  const tgId = tgUser?.id || 12345; 
 
   useEffect(() => {
     if (tg) {
@@ -22,25 +25,64 @@ function App() {
 
   const [allWords, setAllWords] = useState([]);
   const [language, setLanguage] = useState('fr');
-  const [loading, setLoading] = useState(true);
-
-  // NEW: Settings State
+  
+  // Settings State
   const [autoPlaySound, setAutoPlaySound] = useState(true);
+  
+  // Loading States
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
+  const [loadingWords, setLoadingWords] = useState(true);
 
-  // --- FETCH FROM DATABASE ---
+  // --- 1. FETCH USER SETTINGS ON LOAD ---
   useEffect(() => {
-    setLoading(true);
+    fetch(`/api/user/${tgId}`)
+      .then(res => res.json())
+      .then(data => {
+        setLanguage(data.language);
+        setAutoPlaySound(data.autoPlaySound);
+        setSettingsLoaded(true); // Unlock fetching words
+      })
+      .catch(err => {
+        console.error("Error fetching user settings:", err);
+        setSettingsLoaded(true); // Failsafe so the app still loads
+      });
+  }, [tgId]);
+
+  // --- 2. FETCH WORDS (Only after settings are loaded) ---
+  useEffect(() => {
+    if (!settingsLoaded) return;
+    
+    setLoadingWords(true);
     fetch(`/api/words?lang=${language}`)
       .then(res => res.json())
       .then(data => {
         setAllWords(data);
-        setLoading(false);
+        setLoadingWords(false);
       })
       .catch(err => {
         console.error("API Error:", err);
-        setLoading(false);
+        setLoadingWords(false);
       });
-  }, [language]);
+  }, [language, settingsLoaded]);
+
+  // --- 3. SAVE SETTINGS TO DB ---
+  const handleLanguageChange = (newLang) => {
+    setLanguage(newLang);
+    fetch('/api/user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tg_id: tgId, language: newLang, autoPlaySound })
+    });
+  };
+
+  const handleAutoPlayChange = (newVal) => {
+    setAutoPlaySound(newVal);
+    fetch('/api/user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tg_id: tgId, language, autoPlaySound: newVal })
+    });
+  };
 
   // --- DYNAMIC CATEGORIES ---
   const uniqueCategoryNames = [...new Set(allWords.map(w => w.category))];
@@ -80,7 +122,6 @@ function App() {
   const sessionWords = allWords.filter(w => w.category === selectedCategory);
   const currentWord = sessionWords[currentIndex];
 
-  // --- TEXT TO SPEECH ENGINE ---
   // --- TEXT TO SPEECH ENGINE ---
   const speakText = (text, langCode) => {
     if ('speechSynthesis' in window) {
@@ -184,7 +225,9 @@ function App() {
     }
   };
 
-  if (loading) return <div className="app-container"><h2 style={{ marginTop: '50px', textAlign: 'center' }}>Loading Words...</h2></div>;
+  if (loadingWords || !settingsLoaded) {
+    return <div className="app-container"><h2 style={{ marginTop: '50px', textAlign: 'center' }}>Loading Words...</h2></div>;
+  }
 
   return (
     <div className="app-container">
@@ -200,7 +243,6 @@ function App() {
                 <strong>{userName}</strong>
               </div>
             </div>
-            {/* Language toggle moved to Settings */}
           </header>
 
           <h2>Choose a category</h2>
@@ -231,10 +273,10 @@ function App() {
             <select
               className="settings-select"
               value={language}
-              onChange={(e) => setLanguage(e.target.value)}
+              onChange={(e) => handleLanguageChange(e.target.value)}
             >
-              <option value="fr">French</option>
-              <option value="en">English</option>
+              <option value="fr">French 🇫🇷</option>
+              <option value="en">English 🇬🇧</option>
             </select>
           </div>
 
@@ -247,7 +289,7 @@ function App() {
               <input
                 type="checkbox"
                 checked={autoPlaySound}
-                onChange={(e) => setAutoPlaySound(e.target.checked)}
+                onChange={(e) => handleAutoPlayChange(e.target.checked)}
               />
               <span className="slider round"></span>
             </label>
@@ -348,7 +390,7 @@ function App() {
         </div>
       )}
 
-      {/* Persistent Bottom Nav - Now handles Dashboard and Settings */}
+      {/* Persistent Bottom Nav */}
       {(view === 'dashboard' || view === 'settings') && (
         <nav className="bottom-nav">
           <div className={`nav-item ${view === 'dashboard' ? 'active' : ''}`} onClick={() => setView('dashboard')}>
