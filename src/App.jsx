@@ -31,13 +31,37 @@ function App() {
   const [language, setLanguage] = useState('fr');
 
   // Settings State
-  const [autoPlaySound, setAutoPlaySound] = useState(true);
+    const [autoPlaySound, setAutoPlaySound] = useState(true);
+      const [activeModes, setActiveModes] = useState({
+        flashcard: true,
+        quiz: true,
+        typing: true
+      });
 
   // Loading States
   const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [loadingWords, setLoadingWords] = useState(true);
 
   // --- 1. FETCH USER SETTINGS ON LOAD ---
+
+
+  const handleModeToggle = (modeName) => {
+    const newModes = { ...activeModes, [modeName]: !activeModes[modeName] };
+
+    // Failsafe: Prevent the user from turning off all 3 exercises at once!
+    if (!newModes.flashcard && !newModes.quiz && !newModes.typing) {
+      return; 
+    }
+
+    setActiveModes(newModes);
+    fetch('/api/user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tg_id: tgId, language, autoPlaySound, activeModes: newModes })
+    });
+  };
+
+
   useEffect(() => {
     fetch(`/api/user/${tgId}`)
       .then(res => res.json())
@@ -216,10 +240,19 @@ function App() {
     return [currentWord.word, ...shuffledOthers].sort(() => 0.5 - Math.random());
   }, [currentWord, sessionWords, language]);
 
+
+  const getRandomExercise = () => {
+    const available = Object.keys(activeModes).filter(key => activeModes[key]);
+    return available[Math.floor(Math.random() * available.length)];
+  };
+  
   const startStudy = (cat) => {
     setSelectedCategory(cat.title);
     setCurrentIndex(0);
-    setExerciseType('flashcard');
+    
+    // Always try to start with a Flashcard first to learn the word, otherwise pick randomly
+    setExerciseType(activeModes.flashcard ? 'flashcard' : getRandomExercise());
+    
     setFeedback(null);
     setFailedAttempts(0);
     setView('study');
@@ -228,10 +261,11 @@ function App() {
   const handleNext = () => {
     setFeedback(null);
     setFailedAttempts(0);
+    
     if (currentIndex < sessionWords.length - 1) {
       setCurrentIndex(currentIndex + 1);
-      const types = ['flashcard', 'quiz', 'typing'];
-      setExerciseType(types[Math.floor(Math.random() * types.length)]);
+      // Pick a random exercise based on user settings
+      setExerciseType(getRandomExercise());
     } else {
       setView('dashboard');
     }
@@ -309,7 +343,7 @@ function App() {
             
             <h2>READY TO LEARN?</h2> 
             {/* For now, this just starts the first category. We can add a category selector later! */}
-            <button className="start-now-btn" onClick={() => categories.length > 0 && startStudy(categories[0])}>
+            <button className="start-now-btn" onClick={ () => setView('vocabulary')}>
               START NOW
             </button>
           </div>
@@ -351,15 +385,15 @@ function App() {
           <div className="setting-card">
             <div className="setting-info">
               <h3>Language</h3>
-              <p>Choose what you want to learn</p>
+              <p>Choose what to learn</p>
             </div>
             <select
               className="settings-select"
               value={language}
               onChange={(e) => handleLanguageChange(e.target.value)}
             >
-              <option value="fr">French 🇫🇷</option>
-              <option value="en">English 🇬🇧</option>
+              <option value="fr">French</option>
+              <option value="en">English</option>
             </select>
           </div>
 
@@ -376,6 +410,44 @@ function App() {
               />
               <span className="slider round"></span>
             </label>
+          </div>
+          <h3 className="settings-section-title">Active Exercises</h3>
+          
+          <div className="settings-group-card">
+            
+            <div className="setting-row">
+              <div className="setting-info">
+                <h3>Flashcards</h3>
+                <p>Learn new vocabulary</p>
+              </div>
+              <label className="switch">
+                <input type="checkbox" checked={activeModes.flashcard} onChange={() => handleModeToggle('flashcard')} />
+                <span className="slider round"></span>
+              </label>
+            </div>
+
+            <div className="setting-row">
+              <div className="setting-info">
+                <h3>Multiple Choice</h3>
+                <p>Test word recognition</p>
+              </div>
+              <label className="switch">
+                <input type="checkbox" checked={activeModes.quiz} onChange={() => handleModeToggle('quiz')} />
+                <span className="slider round"></span>
+              </label>
+            </div>
+
+            <div className="setting-row">
+              <div className="setting-info">
+                <h3>Typing</h3>
+                <p>Practice exact spelling</p>
+              </div>
+              <label className="switch">
+                <input type="checkbox" checked={activeModes.typing} onChange={() => handleModeToggle('typing')} />
+                <span className="slider round"></span>
+              </label>
+            </div>
+
           </div>
         </div>
       )}

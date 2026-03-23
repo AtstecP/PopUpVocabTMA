@@ -22,10 +22,10 @@ export default function Flashcard({ word, image, onNext, speakText, language }) 
       <div className="flashcard-scene" onClick={handleFlip}>
         <div className={`flashcard-inner ${flipped ? 'flipped' : ''}`}>
           
-          {/* FRONT - Embedded image is here now */}
+          {/* FRONT */}
           <div className="card-face card-front">
             
-            {/* 1. Embed the Image INSIDE the card content area */}
+            {/* The image is now INSIDE the card with the correct square CSS class */}
             {image && (
               <div className="embedded-image-container">
                 <img src={image} alt="vocabulary visual" className="word-image" />

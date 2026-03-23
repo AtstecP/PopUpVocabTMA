@@ -23,6 +23,11 @@
   box-sizing: border-box;
 }
 
+/* Force all buttons, inputs, and dropdowns to use Poppins */
+input, button, select, textarea {
+  font-family: inherit;
+}
+
 /* Hide scrollbars but keep scrolling */
 *::-webkit-scrollbar { display: none; }
 * { -ms-overflow-style: none; scrollbar-width: none; }
@@ -142,11 +147,15 @@ body {
 .back-btn {
   background: none;
   border: none;
-  color: var(--accent-blue);
+  color: var(--text-grey);
   font-weight: 700;
   font-size: 1.1rem;
   cursor: pointer;
   padding: 0;
+  transition: color 0.2s ease;
+}
+.back-btn:active {
+  color: var(--text-main);
 }
 
 .progress-text {
@@ -335,18 +344,17 @@ body {
 /* =========================================
    5. STUDY EXERCISES (Flashcard, Quiz, Typing)
    ========================================= */
-.exercise-container {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
+
+/* --- SHARED WHITE CARD & IMAGE STYLES --- */
+.exercise-box { 
+  width: 100%; 
 }
 
-/* Shared White Box for Exercises */
 .exercise-box, .card-face {
   background: white;
   border-radius: 24px;
   box-shadow: var(--shadow-card);
-  border: 2px solid #e2e8f0;
+  border: 2px solid #e8e6ee;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -355,22 +363,24 @@ body {
   padding: 30px 20px;
 }
 
-.exercise-box { width: 100%; }
-
-/* Image Setup */
 .embedded-image-container {
   width: 160px;
   height: 160px;
   margin: 0 auto 20px auto;
   border-radius: 20px;
   overflow: hidden; 
-  border: 3px solid #f1f5f9;
+  border: 3px solid #f0e6ff;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 12px rgba(43, 23, 77, 0.05);
 }
-.word-image { width: 100%; height: 100%; object-fit: cover; }
 
-/* Text within Exercises */
+.word-image { 
+  width: 100%; 
+  height: 100%; 
+  object-fit: cover; 
+}
+
+/* --- TEXT & TYPOGRAPHY --- */
 .target-word-container {
   display: flex;
   align-items: center;
@@ -378,11 +388,28 @@ body {
   gap: 15px;
   margin: 10px 0;
 }
-.target-word { font-size: 2.2rem; font-weight: 800; color: var(--accent-blue); margin: 0; }
-.answer-text { font-size: 1.8rem; font-weight: 600; color: var(--text-grey); font-style: italic; }
-.hint { color: var(--text-grey); font-size: 0.9rem; margin-top: 5px; }
 
-/* 3D Flashcard specific */
+.target-word { 
+  font-size: 2.2rem; 
+  font-weight: 800; 
+  color: var(--text-main); 
+  margin: 0; 
+  letter-spacing: -0.5px;
+}
+
+.answer-text { 
+  font-size: 1.8rem; 
+  font-weight: 700; 
+  color: var(--accent-purple); 
+}
+
+.hint { 
+  color: var(--text-grey); 
+  font-size: 0.9rem; 
+  margin-top: 5px; 
+}
+
+/* --- 3D FLASHCARD SPECIFIC --- */
 .flashcard-scene {
   width: 100%;
   height: 400px; 
@@ -390,6 +417,7 @@ body {
   cursor: pointer;
   margin-bottom: 20px;
 }
+
 .flashcard-inner {
   width: 100%;
   height: 100%;
@@ -397,7 +425,9 @@ body {
   transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
   transform-style: preserve-3d;
 }
+
 .flashcard-inner.flipped { transform: rotateX(180deg); }
+
 .card-face {
   position: absolute;
   width: 100%;
@@ -405,14 +435,15 @@ body {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
+
 .card-back {
   transform: rotateX(180deg);
-  background-color: #f8fafc;
+  background-color: #faf9fb;
 }
 
-/* Audio Buttons */
+/* --- AUDIO BUTTONS --- */
 .sound-btn {
-  background: #f1f5f9;
+  background: #f0e6ff; 
   border: none;
   border-radius: 50%;
   width: 45px;
@@ -424,56 +455,84 @@ body {
   justify-content: center;
   transition: all 0.2s;
 }
-.sound-btn:active { transform: scale(0.9); background: #e2e8f0; }
+.sound-btn:active { transform: scale(0.9); background: #e8e6ee; }
 .sound-btn.small { width: 35px; height: 35px; font-size: 1rem; }
 
-/* Quiz & Typing Controls */
-.exercise-box h3 { color: var(--text-grey); font-size: 1.1rem; margin-top: 0; margin-bottom: 10px; }
-.options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; margin-top: 20px; }
+/* --- QUIZ & TYPING CONTROLS --- */
+.exercise-box h3 { 
+  color: var(--text-grey); 
+  font-size: 1.1rem; 
+  margin-top: 0; 
+  margin-bottom: 10px; 
+}
+
+.options-grid { 
+  display: grid; 
+  grid-template-columns: 1fr 1fr; 
+  gap: 15px; 
+  width: 100%; 
+  margin-top: 20px; 
+}
+
 .option-btn {
-  background: #f8fafc;
-  border: 2px solid #e2e8f0;
-  padding: 15px 10px;
-  border-radius: 15px;
+  background: white;
+  border: 2px solid #e8e6ee;
+  padding: 16px 10px;
+  border-radius: 16px;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-main);
   cursor: pointer;
   transition: all 0.2s;
+  box-shadow: var(--shadow-card);
 }
-.option-btn:active { background: #e2e8f0; transform: scale(0.95); }
+.option-btn:active { 
+  background: #f0e6ff; 
+  border-color: var(--accent-purple); 
+  transform: scale(0.95); 
+}
 
 .typing-input {
   width: 90%;
-  padding: 15px;
+  padding: 16px;
   margin: 20px 0;
-  border: 2px solid #e2e8f0;
-  border-radius: 15px;
+  border: 2px solid #e8e6ee;
+  border-radius: 16px;
   font-size: 1.2rem;
   text-align: center;
   outline: none;
-  background: #f8fafc;
+  background: #faf9fb;
   color: var(--text-main);
-  font-weight: 600;
-}
-.typing-input:focus { border-color: var(--accent-blue); background: white; }
-
-.submit-btn {
-  background: var(--accent-blue);
-  color: white;
-  border: none;
-  padding: 15px 30px;
-  border-radius: 15px;
-  font-size: 1.1rem;
   font-weight: 700;
-  cursor: pointer;
-  width: 100%;
-  box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
   transition: all 0.2s;
 }
-.submit-btn:active { transform: scale(0.95); }
+.typing-input:focus { 
+  border-color: var(--accent-purple); 
+  background: white; 
+  box-shadow: 0 0 0 4px rgba(174, 71, 255, 0.1); 
+}
 
-/* Overlays & Reveal */
+.submit-btn {
+  background: var(--btn-gradient); 
+  color: white;
+  border: none;
+  padding: 18px 30px;
+  border-radius: 20px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  width: 100%;
+  box-shadow: var(--btn-glow);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.submit-btn:active { 
+  transform: scale(0.95); 
+  box-shadow: 0 5px 15px rgba(174, 71, 255, 0.3);
+}
+
+/* --- OVERLAYS & REVEAL --- */
 .reveal-btn {
   background: none;
   border: none;
@@ -502,10 +561,45 @@ body {
 }
 .feedback.correct { background: #4caf50; }
 .feedback.wrong { background: #f44336; }
-
 /* =========================================
    6. SETTINGS TAB
    ========================================= */
+
+   /* --- SETTINGS GROUPS --- */
+.settings-section-title {
+  margin-left: 10px;
+  margin-top: 25px;
+  margin-bottom: 10px;
+  color: var(--text-grey);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 700;
+}
+
+.settings-group-card {
+  background: white;
+  border-radius: 24px;
+  box-shadow: var(--shadow-card);
+  padding: 5px 20px; 
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 0;
+  border-bottom: 2px solid #f5f4f8; /* Soft divider line */
+}
+
+/* Removes the line from the very last item so it looks clean */
+.setting-row:last-child {
+  border-bottom: none;
+}
+
 .settings-view { padding-bottom: 80px; }
 .setting-card {
   background: white;
