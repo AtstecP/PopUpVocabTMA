@@ -3,12 +3,10 @@ import koalaImg from './assets/koala.png'
 import './App.css'
 
 function App() {
-  const [view, setView] = useState('dashboard');
-  const [selectedCategory, setSelectedCategory] = useState(null);
+  // --- TELEGRAM INIT ---
   const tg = window.Telegram?.WebApp;
   const tgUser = tg?.initDataUnsafe?.user;
-
-  const userName = tgUser?.first_name || 'Student'; // Fallback if opened in a normal browser
+  const userName = tgUser?.first_name || 'Student';
   const userPhoto = tgUser?.photo_url || koalaImg;
 
   useEffect(() => {
@@ -18,11 +16,18 @@ function App() {
     }
   }, []);
 
+  // --- GLOBAL STATE ---
+  const [view, setView] = useState('dashboard'); // 'dashboard', 'study', 'settings'
+  const [selectedCategory, setSelectedCategory] = useState(null);
+
   const [allWords, setAllWords] = useState([]);
   const [language, setLanguage] = useState('fr');
   const [loading, setLoading] = useState(true);
 
-  // --- 1. FETCH FROM DATABASE ---
+  // NEW: Settings State
+  const [autoPlaySound, setAutoPlaySound] = useState(true);
+
+  // --- FETCH FROM DATABASE ---
   useEffect(() => {
     setLoading(true);
     fetch(`/api/words?lang=${language}`)
@@ -37,7 +42,7 @@ function App() {
       });
   }, [language]);
 
-  // --- 2. DYNAMIC CATEGORIES ---
+  // --- DYNAMIC CATEGORIES ---
   const uniqueCategoryNames = [...new Set(allWords.map(w => w.category))];
 
   const getCategoryStyle = (catName) => {
@@ -66,7 +71,7 @@ function App() {
     };
   });
 
-  // --- 3. STUDY SESSION STATE ---
+  // --- STUDY SESSION STATE ---
   const [currentIndex, setCurrentIndex] = useState(0);
   const [exerciseType, setExerciseType] = useState('flashcard');
   const [feedback, setFeedback] = useState(null);
@@ -75,28 +80,71 @@ function App() {
   const sessionWords = allWords.filter(w => w.category === selectedCategory);
   const currentWord = sessionWords[currentIndex];
 
-  // --- NEW: SMART QUIZ OPTIONS ---
-  // This automatically generates 3 wrong answers from the same category
+  // --- TEXT TO SPEECH ENGINE ---
+  // --- TEXT TO SPEECH ENGINE ---
+  const speakText = (text, langCode) => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+
+      // Default to British English instead of US for a better baseline sound
+      utterance.lang = langCode === 'fr' ? 'fr-FR' : 'en-GB';
+      utterance.rate = 0.9;
+
+      // Search for premium native voices
+      const voices = window.speechSynthesis.getVoices();
+      if (voices.length > 0) {
+        let selectedVoice;
+
+        if (langCode === 'en') {
+          // Look for high-quality iOS or Google voices
+          selectedVoice = voices.find(v =>
+            v.name.includes('Samantha') ||
+            v.name.includes('Daniel') ||
+            v.name.includes('Google UK English')
+          ) || voices.find(v => v.lang === 'en-GB');
+        } else if (langCode === 'fr') {
+          // Look for premium French voices
+          selectedVoice = voices.find(v =>
+            v.name.includes('Thomas') ||
+            v.name.includes('Marie') ||
+            v.name.includes('Google français')
+          ) || voices.find(v => v.lang === 'fr-FR');
+        }
+
+        if (selectedVoice) {
+          utterance.voice = selectedVoice;
+        }
+      }
+
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  // SMART AUTO-PLAY: Triggers when word changes or answer is revealed
+  useEffect(() => {
+    if (view === 'study' && currentWord && autoPlaySound) {
+      // If it's a flashcard, read the target word immediately
+      if (exerciseType === 'flashcard' && feedback === null) {
+        speakText(currentWord.word, language);
+      }
+      // If they got it correct or revealed the answer, read the target word
+      if (feedback === 'correct' || feedback === 'show-answer') {
+        speakText(currentWord.word, language);
+      }
+    }
+  }, [currentIndex, view, feedback, exerciseType]);
+
   const quizOptions = useMemo(() => {
     if (!currentWord || !sessionWords) return [];
-
-    // Get other words from the same category
     const others = sessionWords.filter(w => w.word !== currentWord.word);
     const shuffledOthers = others.sort(() => 0.5 - Math.random()).slice(0, 3).map(w => w.word);
 
-    // If category has < 4 words, add safe fallbacks
-    const fallbacks = language === 'fr'
-      ? ['Chat', 'Chien', 'Maison', 'Voiture', 'Livre']
-      : ['Cat', 'Dog', 'House', 'Car', 'Book'];
-
+    const fallbacks = language === 'fr' ? ['Chat', 'Chien', 'Maison', 'Voiture', 'Livre'] : ['Cat', 'Dog', 'House', 'Car', 'Book'];
     while (shuffledOthers.length < 3) {
       const fallback = fallbacks.pop();
-      if (fallback !== currentWord.word && !shuffledOthers.includes(fallback)) {
-        shuffledOthers.push(fallback);
-      }
+      if (fallback !== currentWord.word && !shuffledOthers.includes(fallback)) shuffledOthers.push(fallback);
     }
-
-    // Combine correct answer with wrong answers and shuffle
     return [currentWord.word, ...shuffledOthers].sort(() => 0.5 - Math.random());
   }, [currentWord, sessionWords, language]);
 
@@ -121,18 +169,15 @@ function App() {
     }
   };
 
-  // --- 4. UPDATED VALIDATION LOGIC ---
   const checkAnswer = (answer) => {
     if (!answer) return;
 
-    // Compare answer to the WORD (French) instead of the DEFINITION (English)
     if (answer.toLowerCase().trim() === currentWord.word.toLowerCase()) {
       setFeedback('correct');
       setTimeout(handleNext, 1200);
     } else {
       setFeedback('wrong');
       setFailedAttempts(prev => prev + 1);
-
       setTimeout(() => {
         setFeedback(prev => prev === 'wrong' ? null : prev);
       }, 1000);
@@ -143,22 +188,19 @@ function App() {
 
   return (
     <div className="app-container">
+
       {/* --- VIEW: DASHBOARD --- */}
       {view === 'dashboard' && (
-        <>
+        <div className="scrollable-content">
           <header className="header">
             <div className="user-profile">
-              {/* Update the src right here: */}
               <img src={userPhoto} alt="User" className="avatar" />
               <div className="welcome-text">
                 <span>Learning {language === 'fr' ? 'French' : 'English'}</span>
                 <strong>{userName}</strong>
               </div>
             </div>
-
-            <button className="lang-toggle-btn" onClick={() => setLanguage(language === 'fr' ? 'en' : 'fr')}>
-              {language === 'fr' ? '🇫🇷' : '🇬🇧'}
-            </button>
+            {/* Language toggle moved to Settings */}
           </header>
 
           <h2>Choose a category</h2>
@@ -173,7 +215,44 @@ function App() {
               </div>
             ))}
           </div>
-        </>
+        </div>
+      )}
+
+      {/* --- VIEW: SETTINGS --- */}
+      {view === 'settings' && (
+        <div className="settings-view scrollable-content">
+          <h2>Settings</h2>
+
+          <div className="setting-card">
+            <div className="setting-info">
+              <h3>Language</h3>
+              <p>Choose what you want to learn</p>
+            </div>
+            <select
+              className="settings-select"
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+            >
+              <option value="fr">French</option>
+              <option value="en">English</option>
+            </select>
+          </div>
+
+          <div className="setting-card">
+            <div className="setting-info">
+              <h3>Auto-Play Pronunciation</h3>
+              <p>Hear words automatically</p>
+            </div>
+            <label className="switch">
+              <input
+                type="checkbox"
+                checked={autoPlaySound}
+                onChange={(e) => setAutoPlaySound(e.target.checked)}
+              />
+              <span className="slider round"></span>
+            </label>
+          </div>
+        </div>
       )}
 
       {/* --- VIEW: STUDY SESSION --- */}
@@ -185,11 +264,20 @@ function App() {
           </div>
 
           {/* 1. FLASHCARD EXERCISE */}
-          {/* I left this as Word -> Definition, as that is standard for initial learning before testing */}
           {exerciseType === 'flashcard' && (
             <div className="exercise-box card-mode" onClick={() => setFeedback('show-answer')}>
-              <div className="target-word">{currentWord.word}</div>
-              {feedback === 'show-answer' && <div className="answer-text">{currentWord.definition}</div>}
+              <div className="target-word-container">
+                <div className="target-word">{currentWord.word}</div>
+                <button className="sound-btn" onClick={(e) => { e.stopPropagation(); speakText(currentWord.word, language); }}>🔊</button>
+              </div>
+
+              {feedback === 'show-answer' && (
+                <div className="target-word-container answer-text-container">
+                  <div className="answer-text">{currentWord.definition}</div>
+                  <button className="sound-btn small" onClick={(e) => { e.stopPropagation(); speakText(currentWord.definition, 'en'); }}>🔊</button>
+                </div>
+              )}
+
               <p className="hint">Tap to flip</p>
               {feedback === 'show-answer' && <button className="submit-btn" onClick={(e) => { e.stopPropagation(); handleNext() }}>Got it!</button>}
             </div>
@@ -199,19 +287,23 @@ function App() {
           {exerciseType === 'quiz' && (
             <div className="exercise-box">
               <h3>What is the word for:</h3>
-              {/* Show the Definition as the prompt */}
-              <div className="target-word">{currentWord.definition}</div>
+              <div className="target-word-container">
+                <div className="target-word">{currentWord.definition}</div>
+                <button className="sound-btn small" onClick={() => speakText(currentWord.definition, 'en')}>🔊</button>
+              </div>
 
               {feedback === 'show-answer' ? (
                 <div className="reveal-section">
-                  {/* Reveal the actual Word */}
-                  <p>The answer is: <br /><strong>{currentWord.word}</strong></p>
+                  <p>The answer is:</p>
+                  <div className="target-word-container">
+                    <strong>{currentWord.word}</strong>
+                    <button className="sound-btn" onClick={() => speakText(currentWord.word, language)}>🔊</button>
+                  </div>
                   <button className="submit-btn" onClick={handleNext}>Next Word</button>
                 </div>
               ) : (
                 <>
                   <div className="options-grid">
-                    {/* Map through our newly generated smart options */}
                     {quizOptions.map(opt => (
                       <button key={opt} className="option-btn" onClick={() => checkAnswer(opt)}>{opt}</button>
                     ))}
@@ -226,24 +318,23 @@ function App() {
           {exerciseType === 'typing' && (
             <div className="exercise-box">
               <h3>Type the word for:</h3>
-              {/* Show the Definition as the prompt */}
-              <div className="target-word">{currentWord.definition}</div>
+              <div className="target-word-container">
+                <div className="target-word">{currentWord.definition}</div>
+                <button className="sound-btn small" onClick={() => speakText(currentWord.definition, 'en')}>🔊</button>
+              </div>
 
               {feedback === 'show-answer' ? (
                 <div className="reveal-section">
-                  {/* Reveal the actual Word */}
-                  <p>The answer is: <br /><strong>{currentWord.word}</strong></p>
+                  <p>The answer is:</p>
+                  <div className="target-word-container">
+                    <strong>{currentWord.word}</strong>
+                    <button className="sound-btn" onClick={() => speakText(currentWord.word, language)}>🔊</button>
+                  </div>
                   <button className="submit-btn" onClick={handleNext}>Next Word</button>
                 </div>
               ) : (
                 <>
-                  <input
-                    autoFocus
-                    type="text"
-                    className="typing-input"
-                    placeholder="Type the word..."
-                    onKeyDown={(e) => e.key === 'Enter' && checkAnswer(e.target.value)}
-                  />
+                  <input autoFocus type="text" className="typing-input" placeholder="Type the word..." onKeyDown={(e) => e.key === 'Enter' && checkAnswer(e.target.value)} />
                   <button className="submit-btn" onClick={(e) => checkAnswer(e.target.previousSibling.value)}>Submit</button>
                   {failedAttempts > 0 && <button className="reveal-btn" onClick={() => setFeedback('show-answer')}>Reveal Answer</button>}
                 </>
@@ -257,11 +348,15 @@ function App() {
         </div>
       )}
 
-      {/* Persistent Bottom Nav */}
-      {view === 'dashboard' && (
+      {/* Persistent Bottom Nav - Now handles Dashboard and Settings */}
+      {(view === 'dashboard' || view === 'settings') && (
         <nav className="bottom-nav">
-          <div className="nav-item active">🏠<span>Home</span></div>
-          <div className="nav-item">📚<span>Words</span></div>
+          <div className={`nav-item ${view === 'dashboard' ? 'active' : ''}`} onClick={() => setView('dashboard')}>
+            🏠<span>Home</span>
+          </div>
+          <div className={`nav-item ${view === 'settings' ? 'active' : ''}`} onClick={() => setView('settings')}>
+            ⚙️<span>Settings</span>
+          </div>
         </nav>
       )}
     </div>
