@@ -52,6 +52,60 @@ body {
    ========================================= */
 .modern-dashboard { padding-top: 20px; }
 
+/* =========================================
+   DASHBOARD SCROLL LOCK & FIT
+   ========================================= */
+.locked-dashboard {
+  height: calc(100vh - 120px); /* Exactly fits the screen minus bottom nav */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Completely disables scrolling */
+  padding-top: 10px;
+}
+
+/* Tighten the gaps to fit everything */
+.locked-dashboard .modern-header {
+  margin-bottom: 15px;
+}
+
+.locked-dashboard .stats-grid {
+  margin-bottom: 15px;
+}
+
+.locked-dashboard .calendar-strip {
+  margin-bottom: 10px;
+}
+
+/* Magic responsive hero section */
+.locked-dashboard .hero-section {
+  flex: 1; /* Takes up all remaining screen space */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly; /* Automatically spaces elements evenly */
+  margin-top: 0;
+}
+
+.locked-dashboard .hero-mascot {
+  height: 20vh; /* Image height responds dynamically to screen height! */
+  min-height: 120px;
+  max-height: 180px; 
+  margin-bottom: 0;
+}
+
+.locked-dashboard .hero-section h2 {
+  margin: 0;
+}
+
+.locked-dashboard .hero-section p {
+  margin: 0;
+  font-size: 0.85rem; /* Slightly smaller to ensure fit */
+}
+
+.locked-dashboard .start-now-btn {
+  margin-bottom: 10px;
+}
+
+
 /* --- MODERN HEADER & AVATAR --- */
 .modern-header {
   display: flex;

@@ -261,7 +261,7 @@ function App() {
 
       {/* --- VIEW: DASHBOARD --- */}
       {view === 'dashboard' && (
-        <div className="modern-dashboard scrollable-content">
+        <div className="modern-dashboard locked-dashboard">
           
           <header className="modern-header">
             <img src={userPhoto} alt="User Profile" className="modern-avatar" />
@@ -307,9 +307,7 @@ function App() {
             {/* Swap this with your Nano Banana generation later! */}
             <img src={koalaImg} alt="Mascot" className="hero-mascot" />
             
-            <h2>READY TO LEARN?</h2>
-            <p>Boost your skills with our activities and get the feedback you need to improve.</p>
-            
+            <h2>READY TO LEARN?</h2> 
             {/* For now, this just starts the first category. We can add a category selector later! */}
             <button className="start-now-btn" onClick={() => categories.length > 0 && startStudy(categories[0])}>
               START NOW
