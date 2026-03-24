@@ -47,7 +47,10 @@ function App() {
       .then(data => {
         setLanguage(data.language || 'fr');
         setAutoPlaySound(data.autoPlaySound ?? true);
-        if (data.activeModes) setActiveModes(data.activeModes);
+        // Load the saved modes from the DB
+        if (data.activeModes) {
+          setActiveModes(data.activeModes);
+        }
         setSettingsLoaded(true);
       }).catch(() => setSettingsLoaded(true));
   }, [tgId]);

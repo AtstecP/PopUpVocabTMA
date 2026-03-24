@@ -30,6 +30,7 @@ class UserSettings(BaseModel):
     tg_id: int
     language: str = "fr"
     autoPlaySound: bool = True
+    activeModes: dict = {"flashcard": True, "quiz": True, "typing": True}
 
 # --- ENDPOINTS ---
 @app.get("/api/health")
