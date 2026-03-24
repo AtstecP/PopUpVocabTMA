@@ -3,15 +3,14 @@ import React, { useState, useEffect } from 'react';
 export default function Typing({ word, image, checkAnswer, speakText, language, feedback }) {
   const [input, setInput] = useState('');
   const [showReveal, setShowReveal] = useState(false);
-  const [hasFailed, setHasFailed] = useState(false); // New: Persistent fail state
+  const [hasFailed, setHasFailed] = useState(false);
 
   useEffect(() => {
     setInput('');
     setShowReveal(false);
-    setHasFailed(false); // Reset for new word
+    setHasFailed(false);
   }, [word]);
 
-  // Catch the "wrong" feedback from App.jsx and lock it in
   useEffect(() => {
     if (feedback === 'wrong') {
       setHasFailed(true);
@@ -25,7 +24,8 @@ export default function Typing({ word, image, checkAnswer, speakText, language, 
   };
 
   return (
-    <div className="exercise-box">
+    <div className="exercise-box" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      {/* 1. Definition Sound (Always English) */}
       <button className="sound-btn" onClick={() => speakText(word.definition, 'en')}>🔊</button>
 
       {image && (
@@ -37,7 +37,7 @@ export default function Typing({ word, image, checkAnswer, speakText, language, 
       <h3>Type the word for:</h3>
       <div className="target-word" style={{ marginBottom: '20px' }}>{word.definition}</div>
 
-      <form onSubmit={handleSubmit} style={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
+      <form onSubmit={handleSubmit} style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <input
           type="text"
           className="typing-input"
@@ -45,9 +45,9 @@ export default function Typing({ word, image, checkAnswer, speakText, language, 
           onChange={(e) => setInput(e.target.value)}
           placeholder="Type here..."
           autoComplete="off"
+          style={{ width: '100%', boxSizing: 'border-box' }} // Fixed centering
         />
 
-        {/* IMPROVED REVEAL BUTTON */}
         {hasFailed && !showReveal && (
           <button
             type="button"
@@ -65,14 +65,14 @@ export default function Typing({ word, image, checkAnswer, speakText, language, 
             }}
             onClick={() => {
               setShowReveal(true);
-              speakText(word.word, language);
+              // 2. Correct Language Trigger (French for 'fr')
+              speakText(word.word, language); 
             }}
           >
             Show correct answer
           </button>
         )}
 
-        {/* CLEAN UPRIGHT ANSWER TEXT */}
         {showReveal && (
           <div className="reveal-section" style={{ textAlign: 'center', margin: '15px 0' }}>
             <p style={{ color: 'var(--text-grey)', fontSize: '0.8rem', margin: 0 }}>
@@ -82,7 +82,7 @@ export default function Typing({ word, image, checkAnswer, speakText, language, 
               color: '#2d2d2d',
               fontWeight: '800',
               fontSize: '1.4rem',
-              fontStyle: 'normal', // FORCES NON-ITALIC
+              fontStyle: 'normal',
               marginTop: '5px'
             }}>
               {word.word}
@@ -90,7 +90,7 @@ export default function Typing({ word, image, checkAnswer, speakText, language, 
           </div>
         )}
 
-        <button type="submit" className="submit-btn" style={{ marginTop: showReveal ? '10px' : '20px' }}>
+        <button type="submit" className="submit-btn" style={{ marginTop: showReveal ? '10px' : '20px', width: '100%' }}>
           Submit
         </button>
       </form>
