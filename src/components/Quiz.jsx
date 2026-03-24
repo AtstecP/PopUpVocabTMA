@@ -30,8 +30,14 @@ export default function Quiz({ word, image, options, checkAnswer, speakText, lan
         ) : (
           <>
             <div className="options-grid">
-              {options.map(opt => (
-                <button key={opt} className="option-btn" onClick={() => checkAnswer(opt)}>{opt}</button>
+              {options.map((option, index) => (
+                <button
+                  key={index}
+                  className="option-btn"
+                  onClick={() => checkAnswer(option)}
+                >
+                  {option}
+                </button>
               ))}
             </div>
             {failedAttempts > 0 && (

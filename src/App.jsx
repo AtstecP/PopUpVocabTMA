@@ -26,17 +26,22 @@ function App() {
   // --- GLOBAL STATE ---
   const [view, setView] = useState('dashboard'); // 'dashboard', 'study', 'settings'
   const [selectedCategory, setSelectedCategory] = useState(null);
-
   const [allWords, setAllWords] = useState([]);
   const [language, setLanguage] = useState('fr');
 
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentOptions, setCurrentOptions] = useState([]);
+
+  const sessionWords = allWords.filter(w => w.category === selectedCategory);
+  const currentWord = sessionWords[currentIndex];
+
   // Settings State
-    const [autoPlaySound, setAutoPlaySound] = useState(true);
-      const [activeModes, setActiveModes] = useState({
-        flashcard: true,
-        quiz: true,
-        typing: true
-      });
+  const [autoPlaySound, setAutoPlaySound] = useState(true);
+  const [activeModes, setActiveModes] = useState({
+    flashcard: true,
+    quiz: true,
+    typing: true
+  });
 
   // Loading States
   const [settingsLoaded, setSettingsLoaded] = useState(false);
@@ -50,7 +55,7 @@ function App() {
 
     // Failsafe: Prevent the user from turning off all 3 exercises at once!
     if (!newModes.flashcard && !newModes.quiz && !newModes.typing) {
-      return; 
+      return;
     }
 
     setActiveModes(newModes);
@@ -92,6 +97,38 @@ function App() {
         setLoadingWords(false);
       });
   }, [language, settingsLoaded]);
+
+    useEffect(() => {
+    // Only run if we are actually studying and have a word
+    if (view !== 'study' || !currentWord || sessionWords.length === 0) return;
+
+    // 1. Get wrong answers from the CURRENT filtered session words
+    const others = sessionWords
+      .filter(w => w.word !== currentWord.word)
+      .sort(() => 0.5 - Math.random())
+      .slice(0, 3)
+      .map(w => w.word);
+
+    // 2. Add fallbacks
+    const fallbacks = language === 'fr'
+      ? ['Chat', 'Chien', 'Maison', 'Voiture', 'Livre']
+      : ['Cat', 'Dog', 'House', 'Car', 'Book'];
+
+    let finalOthers = [...others];
+    while (finalOthers.length < 3) {
+      const fallback = fallbacks.pop();
+      if (fallback && fallback !== currentWord.word && !finalOthers.includes(fallback)) {
+        finalOthers.push(fallback);
+      }
+    }
+
+    // 3. Shuffle final 4
+    const finalSet = [currentWord.word, ...finalOthers].sort(() => 0.5 - Math.random());
+    setCurrentOptions(finalSet);
+
+  }, [currentIndex, selectedCategory, view]); // Trigger on word change or category change
+
+
 
   // --- 3. SAVE SETTINGS TO DB ---
   const handleLanguageChange = (newLang) => {
@@ -151,14 +188,10 @@ function App() {
   });
 
   // --- STUDY SESSION STATE ---
-  const [currentIndex, setCurrentIndex] = useState(0);
+  
   const [exerciseType, setExerciseType] = useState('flashcard');
   const [feedback, setFeedback] = useState(null);
   const [failedAttempts, setFailedAttempts] = useState(0);
-
-  const sessionWords = allWords.filter(w => w.category === selectedCategory);
-  const currentWord = sessionWords[currentIndex];
-
 
   const [currentImage, setCurrentImage] = useState(null);
   const [imageLoading, setImageLoading] = useState(false);
@@ -236,32 +269,18 @@ function App() {
     }
   }, [currentIndex, view, feedback, exerciseType]);
 
-  const quizOptions = useMemo(() => {
-    if (!currentWord || !sessionWords) return [];
-    const others = sessionWords.filter(w => w.word !== currentWord.word);
-    const shuffledOthers = others.sort(() => 0.5 - Math.random()).slice(0, 3).map(w => w.word);
-
-    const fallbacks = language === 'fr' ? ['Chat', 'Chien', 'Maison', 'Voiture', 'Livre'] : ['Cat', 'Dog', 'House', 'Car', 'Book'];
-    while (shuffledOthers.length < 3) {
-      const fallback = fallbacks.pop();
-      if (fallback !== currentWord.word && !shuffledOthers.includes(fallback)) shuffledOthers.push(fallback);
-    }
-    return [currentWord.word, ...shuffledOthers].sort(() => 0.5 - Math.random());
-  }, [currentWord, sessionWords, language]);
-
-
   const getRandomExercise = () => {
     const available = Object.keys(activeModes).filter(key => activeModes[key]);
     return available[Math.floor(Math.random() * available.length)];
   };
-  
+
   const startStudy = (cat) => {
     setSelectedCategory(cat.title);
     setCurrentIndex(0);
-    
+
     // Always try to start with a Flashcard first to learn the word, otherwise pick randomly
     setExerciseType(activeModes.flashcard ? 'flashcard' : getRandomExercise());
-    
+
     setFeedback(null);
     setFailedAttempts(0);
     setView('study');
@@ -270,7 +289,7 @@ function App() {
   const handleNext = () => {
     setFeedback(null);
     setFailedAttempts(0);
-    
+
     if (currentIndex < sessionWords.length - 1) {
       setCurrentIndex(currentIndex + 1);
       // Pick a random exercise based on user settings
@@ -305,7 +324,7 @@ function App() {
       {/* --- VIEW: DASHBOARD --- */}
       {view === 'dashboard' && (
         <div className="modern-dashboard locked-dashboard">
-          
+
           <header className="modern-header">
             <img src={userPhoto} alt="User Profile" className="modern-avatar" />
             <h1>Hi {userName}</h1>
@@ -320,7 +339,7 @@ function App() {
               </div>
               <div className="progress-ring"></div>
             </div>
-            
+
             <div className="stat-card">
               <span className="stat-title">Days until TCF</span>
               <div className="stat-value">
@@ -333,8 +352,8 @@ function App() {
           <div className="calendar-strip">
             {/* Hardcoded for visual mockup, we can make this dynamic later! */}
             {[
-              { day: 'MON', num: '6' }, { day: 'TUE', num: '7' }, 
-              { day: 'WED', num: '8', dot: true }, { day: 'THU', num: '9', active: true }, 
+              { day: 'MON', num: '6' }, { day: 'TUE', num: '7' },
+              { day: 'WED', num: '8', dot: true }, { day: 'THU', num: '9', active: true },
               { day: 'FRI', num: '10' }, { day: 'SAT', num: '11' }, { day: 'SUN', num: '12' }
             ].map((d, i) => (
               <div key={i} className={`cal-item ${d.active ? 'active' : ''}`}>
@@ -349,10 +368,10 @@ function App() {
           <div className="hero-section">
             {/* Swap this with your Nano Banana generation later! */}
             <img src={koalaImg} alt="Mascot" className="hero-mascot" />
-            
-            <h2>READY TO LEARN?</h2> 
+
+            <h2>READY TO LEARN?</h2>
             {/* For now, this just starts the first category. We can add a category selector later! */}
-            <button className="start-now-btn" onClick={ () => setView('vocabulary')}>
+            <button className="start-now-btn" onClick={() => setView('vocabulary')}>
               START NOW
             </button>
           </div>
@@ -366,9 +385,9 @@ function App() {
           <header className="modern-header">
             <h1>Vocabulary</h1>
           </header>
-          
+
           <p className="section-desc">Choose a topic to begin your session.</p>
-          
+
           <div className="modern-category-list">
             {categories.map(cat => (
               <div key={cat.id} className="modern-category-card" onClick={() => startStudy(cat)}>
@@ -421,9 +440,9 @@ function App() {
             </label>
           </div>
           <h3 className="settings-section-title">Active Exercises</h3>
-          
+
           <div className="settings-group-card">
-            
+
             <div className="setting-row">
               <div className="setting-info">
                 <h3>Flashcards</h3>
@@ -481,11 +500,11 @@ function App() {
           )}
 
           {/* 2. QUIZ EXERCISE */}
-          {exerciseType === 'quiz' && (
+          {exerciseType === 'quiz' && currentOptions.length > 0 && (
             <Quiz
               word={currentWord}
               image={currentImage}
-              options={quizOptions}
+              options={currentOptions}
               checkAnswer={checkAnswer}
               speakText={speakText}
               language={language}
@@ -521,7 +540,7 @@ function App() {
       {/* Persistent Bottom Nav - 4 Items */}
       {(view === 'dashboard' || view === 'settings' || view === 'vocabulary') && (
         <nav className="bottom-nav">
-          
+
           <div className={`nav-item ${view === 'dashboard' ? 'active' : ''}`} onClick={() => setView('dashboard')}>
             <svg viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
               <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
