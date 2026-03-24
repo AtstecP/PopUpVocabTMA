@@ -34,7 +34,7 @@ function App() {
   const [exerciseType, setExerciseType] = useState('flashcard');
   const [feedback, setFeedback] = useState(null);
   const [currentImage, setCurrentImage] = useState(null);
-  const [categoryList, setCategoryList] = useState([]); 
+  const [categoryList, setCategoryList] = useState([]);
 
   // Derived Word State
   const currentWord = allWords[currentIndex];
@@ -68,7 +68,7 @@ function App() {
       fetch(`/api/image?word=${encodeURIComponent(currentWord.word)}&search_term=${encodeURIComponent(currentWord.definition)}`)
         .then(res => res.json())
         .then(data => setCurrentImage(data.image_url))
-        .catch(() => {});
+        .catch(() => { });
     }
   }, [currentWord, view]);
 
@@ -91,12 +91,23 @@ function App() {
     setCurrentOptions([currentWord.word, ...finalOthers].sort(() => 0.5 - Math.random()));
   }, [currentIndex, view, exerciseType]);
 
+  // Auto-play sound whenever the word changes during study
+  useEffect(() => {
+    if (view === 'study' && currentWord && autoPlaySound) {
+      // Small delay to ensure the UI has rendered and user is ready
+      const timer = setTimeout(() => {
+        speakText(currentWord.word, language);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [currentWord, view, autoPlaySound]);
   // --- HELPERS ---
   const speakText = (text, langCode) => {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = langCode === 'fr' ? 'fr-FR' : 'en-GB';
+      utterance.rate = 0.9;
       window.speechSynthesis.speak(utterance);
     }
   };
@@ -122,12 +133,12 @@ function App() {
     fetch('/api/user', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        tg_id: tgId, 
-        language, 
-        autoPlaySound, 
-        activeModes, 
-        ...updatedFields 
+      body: JSON.stringify({
+        tg_id: tgId,
+        language,
+        autoPlaySound,
+        activeModes,
+        ...updatedFields
       })
     });
   };
@@ -149,12 +160,12 @@ function App() {
 
   const categories = categoryList.map((cat, i) => {
     const style = getCategoryStyle(cat.title);
-    return { 
-      id: i, 
-      title: cat.title, 
-      icon: style.icon, 
-      type: style.type, 
-      count: cat.count 
+    return {
+      id: i,
+      title: cat.title,
+      icon: style.icon,
+      type: style.type,
+      count: cat.count
     };
   });
 
@@ -168,7 +179,7 @@ function App() {
         setCurrentIndex(0);
         setLoadingWords(false);
         setView('study');
-        
+
         const available = Object.keys(activeModes).filter(k => activeModes[k]);
         setExerciseType(activeModes.flashcard ? 'flashcard' : available[0]);
       })
@@ -202,19 +213,19 @@ function App() {
 
   return (
     <div className="app-container">
-      {loadingWords && <div className="feedback" style={{background: 'rgba(0,0,0,0.5)'}}>Loading Session...</div>}
-      
+      {loadingWords && <div className="feedback" style={{ background: 'rgba(0,0,0,0.5)' }}>Loading Session...</div>}
+
       {view === 'dashboard' && (
         <Dashboard userPhoto={userPhoto} userName={userName} setView={setView} koalaImg={koalaImg} />
       )}
-      
+
       {view === 'vocabulary' && (
         <CategoryList categories={categories} onSelectCategory={startStudy} />
       )}
 
       {view === 'settings' && (
-        <Settings 
-          language={language} 
+        <Settings
+          language={language}
           handleLanguageChange={handleLanguageChange}
           autoPlaySound={autoPlaySound}
           handleAutoPlayChange={handleAutoPlayChange}
@@ -229,7 +240,7 @@ function App() {
             <button className="back-btn" onClick={() => setView('dashboard')}>✕ Close</button>
             <div className="progress-text">Word {currentIndex + 1} of {allWords.length}</div>
           </div>
-          
+
           {exerciseType === 'flashcard' && (
             <Flashcard word={currentWord} image={currentImage} onNext={handleNext} speakText={speakText} language={language} />
           )}
