@@ -37,9 +37,15 @@ def health_check():
     return {"status": "online", "database": "connected" if MONGO_URL else "disconnected"}
 
 @app.get("/api/words")
-async def get_words(lang: str = "fr"):
-    cursor = db.vocabulary.find({"language": lang})
-    words = await cursor.to_list(length=100)
+async def get_words(lang: str = "fr", category: str = None):
+    query = {"language": lang}
+    if category:
+        query["category"] = category
+        
+    cursor = db.vocabulary.find(query)
+    # We can keep a high limit here because it's filtered by category now
+    words = await cursor.to_list(length=500) 
+    
     for word in words:
         word["id"] = str(word["_id"])
         del word["_id"]
@@ -96,3 +102,16 @@ async def get_image(word: str, search_term: str):
             return {"image_url": img_url}
             
     return {"image_url": None}
+
+@app.get("/api/categories")
+async def get_categories(lang: str = "fr"):
+    pipeline = [
+        {"$match": {"language": lang}},
+        {"$group": {"_id": "$category", "count": {"$sum": 1}}}
+    ]
+    cursor = db.vocabulary.aggregate(pipeline)
+    categories = await cursor.to_list(length=100)
+    
+    # Format for frontend: [{"title": "Food", "count": 25}, ...]
+    return [{"title": cat["_id"], "count": cat["count"]} for cat in categories]
+

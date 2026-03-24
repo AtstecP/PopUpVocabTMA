@@ -20,47 +20,68 @@ function App() {
   const userPhoto = tgUser?.photo_url || koalaImg;
   const tgId = tgUser?.id || 12345;
 
+  // --- STATE MANAGEMENT ---
   const [view, setView] = useState('dashboard');
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [allWords, setAllWords] = useState([]);
+  const [allWords, setAllWords] = useState([]); // Now holds ONLY the active session words
   const [language, setLanguage] = useState('fr');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [currentOptions, setCurrentOptions] = useState([]);
   const [autoPlaySound, setAutoPlaySound] = useState(true);
   const [activeModes, setActiveModes] = useState({ flashcard: true, quiz: true, typing: true });
   const [settingsLoaded, setSettingsLoaded] = useState(false);
-  const [loadingWords, setLoadingWords] = useState(true);
+  const [loadingWords, setLoadingWords] = useState(false);
   const [exerciseType, setExerciseType] = useState('flashcard');
   const [feedback, setFeedback] = useState(null);
-  const [failedAttempts, setFailedAttempts] = useState(0);
   const [currentImage, setCurrentImage] = useState(null);
+  const [categoryList, setCategoryList] = useState([]); 
 
-  const sessionWords = allWords.filter(w => w.category === selectedCategory);
-  const currentWord = sessionWords[currentIndex];
+  // Derived Word State
+  const currentWord = allWords[currentIndex];
 
+  // --- 1. INITIAL LOAD: SETTINGS ---
   useEffect(() => {
     if (tg) { tg.ready(); tg.expand(); }
     fetch(`/api/user/${tgId}`)
       .then(res => res.json())
       .then(data => {
-        setLanguage(data.language);
-        setAutoPlaySound(data.autoPlaySound);
+        setLanguage(data.language || 'fr');
+        setAutoPlaySound(data.autoPlaySound ?? true);
+        if (data.activeModes) setActiveModes(data.activeModes);
         setSettingsLoaded(true);
       }).catch(() => setSettingsLoaded(true));
   }, [tgId]);
 
+  // --- 2. FETCH CATEGORY MENU ---
   useEffect(() => {
     if (!settingsLoaded) return;
-    setLoadingWords(true);
-    fetch(`/api/words?lang=${language}`)
+    fetch(`/api/categories?lang=${language}`)
       .then(res => res.json())
-      .then(data => { setAllWords(data); setLoadingWords(false); })
-      .catch(() => setLoadingWords(false));
+      .then(data => setCategoryList(data))
+      .catch(err => console.error("Failed to fetch categories", err));
   }, [language, settingsLoaded]);
 
+  // --- 3. FETCH IMAGES FOR STUDY ---
   useEffect(() => {
-    if (view !== 'study' || !currentWord) return;
-    const others = sessionWords.filter(w => w.word !== currentWord.word).sort(() => 0.5 - Math.random()).slice(0, 3).map(w => w.word);
+    if (view === 'study' && currentWord) {
+      setCurrentImage(null);
+      fetch(`/api/image?word=${encodeURIComponent(currentWord.word)}&search_term=${encodeURIComponent(currentWord.definition)}`)
+        .then(res => res.json())
+        .then(data => setCurrentImage(data.image_url))
+        .catch(() => {});
+    }
+  }, [currentWord, view]);
+
+  // --- 4. GENERATE QUIZ OPTIONS ---
+  useEffect(() => {
+    if (view !== 'study' || !currentWord || exerciseType !== 'quiz') return;
+
+    const others = allWords
+      .filter(w => w.word !== currentWord.word)
+      .sort(() => 0.5 - Math.random())
+      .slice(0, 3)
+      .map(w => w.word);
+
     const fallbacks = language === 'fr' ? ['Chat', 'Chien', 'Maison'] : ['Cat', 'Dog', 'House'];
     let finalOthers = [...others];
     while (finalOthers.length < 3) {
@@ -68,16 +89,9 @@ function App() {
       if (fb && !finalOthers.includes(fb)) finalOthers.push(fb);
     }
     setCurrentOptions([currentWord.word, ...finalOthers].sort(() => 0.5 - Math.random()));
-  }, [currentIndex, selectedCategory, view]);
+  }, [currentIndex, view, exerciseType]);
 
-  useEffect(() => {
-    if (view === 'study' && currentWord) {
-      setCurrentImage(null);
-      fetch(`/api/image?word=${encodeURIComponent(currentWord.word)}&search_term=${encodeURIComponent(currentWord.definition)}`)
-        .then(res => res.json()).then(data => setCurrentImage(data.image_url)).catch(() => {});
-    }
-  }, [currentWord, view]);
-
+  // --- HELPERS ---
   const speakText = (text, langCode) => {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
@@ -85,6 +99,16 @@ function App() {
       utterance.lang = langCode === 'fr' ? 'fr-FR' : 'en-GB';
       window.speechSynthesis.speak(utterance);
     }
+  };
+
+  const handleLanguageChange = (l) => {
+    setLanguage(l);
+    saveSettings({ language: l });
+  };
+
+  const handleAutoPlayChange = (v) => {
+    setAutoPlaySound(v);
+    saveSettings({ autoPlaySound: v });
   };
 
   const handleModeToggle = (modeName) => {
@@ -98,7 +122,13 @@ function App() {
     fetch('/api/user', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tg_id: tgId, language, autoPlaySound, activeModes, ...updatedFields })
+      body: JSON.stringify({ 
+        tg_id: tgId, 
+        language, 
+        autoPlaySound, 
+        activeModes, 
+        ...updatedFields 
+      })
     });
   };
 
@@ -110,54 +140,84 @@ function App() {
       'Home': { icon: '🏠', type: 'light-blue' },
       'Advanced': { icon: '🚀', type: 'light-blue' },
       'Celpip Advice': { icon: '🇨🇦', type: 'light-orange' },
+      'Workplace': { icon: '🏢', type: 'light-green' },
+      'Advice': { icon: '💡', type: 'light-orange' },
+      'Exam': { icon: '📝', type: 'light-grey' },
     };
     return styles[catName] || { icon: '📁', type: 'light-grey' };
   };
 
-  const categories = [...new Set(allWords.map(w => w.category))].map((cat, i) => {
-    const style = getCategoryStyle(cat);
-    return { id: i, title: cat, icon: style.icon, type: style.type, count: allWords.filter(w => w.category === cat).length };
+  const categories = categoryList.map((cat, i) => {
+    const style = getCategoryStyle(cat.title);
+    return { 
+      id: i, 
+      title: cat.title, 
+      icon: style.icon, 
+      type: style.type, 
+      count: cat.count 
+    };
   });
 
   const startStudy = (cat) => {
-    setSelectedCategory(cat.title);
-    setCurrentIndex(0);
-    const available = Object.keys(activeModes).filter(k => activeModes[k]);
-    setExerciseType(activeModes.flashcard ? 'flashcard' : available[0]);
-    setView('study');
+    setLoadingWords(true);
+    fetch(`/api/words?lang=${language}&category=${encodeURIComponent(cat.title)}`)
+      .then(res => res.json())
+      .then(data => {
+        setAllWords(data);
+        setSelectedCategory(cat.title);
+        setCurrentIndex(0);
+        setLoadingWords(false);
+        setView('study');
+        
+        const available = Object.keys(activeModes).filter(k => activeModes[k]);
+        setExerciseType(activeModes.flashcard ? 'flashcard' : available[0]);
+      })
+      .catch(() => setLoadingWords(false));
   };
 
   const handleNext = () => {
-    if (currentIndex < sessionWords.length - 1) {
+    if (currentIndex < allWords.length - 1) {
       setCurrentIndex(currentIndex + 1);
       const available = Object.keys(activeModes).filter(k => activeModes[k]);
       setExerciseType(available[Math.floor(Math.random() * available.length)]);
-    } else { setView('dashboard'); }
+      setFeedback(null);
+    } else {
+      setView('dashboard');
+    }
   };
 
   const checkAnswer = (ans) => {
     if (ans.toLowerCase().trim() === currentWord.word.toLowerCase()) {
-      setFeedback('correct'); setTimeout(handleNext, 1200);
+      setFeedback('correct');
+      if (autoPlaySound) speakText(currentWord.word, language);
+      setTimeout(handleNext, 1200);
     } else {
-      setFeedback('wrong'); setFailedAttempts(a => a + 1);
+      setFeedback('wrong');
       setTimeout(() => setFeedback(null), 1000);
     }
   };
 
-  if (loadingWords || !settingsLoaded) return <div className="app-container"><h2>Loading...</h2></div>;
+  // --- RENDER ---
+  if (!settingsLoaded) return <div className="app-container"><h2>Loading...</h2></div>;
 
   return (
     <div className="app-container">
-      {view === 'dashboard' && <Dashboard userPhoto={userPhoto} userName={userName} setView={setView} koalaImg={koalaImg} />}
+      {loadingWords && <div className="feedback" style={{background: 'rgba(0,0,0,0.5)'}}>Loading Session...</div>}
       
-      {view === 'vocabulary' && <CategoryList categories={categories} onSelectCategory={startStudy} />}
+      {view === 'dashboard' && (
+        <Dashboard userPhoto={userPhoto} userName={userName} setView={setView} koalaImg={koalaImg} />
+      )}
+      
+      {view === 'vocabulary' && (
+        <CategoryList categories={categories} onSelectCategory={startStudy} />
+      )}
 
       {view === 'settings' && (
         <Settings 
           language={language} 
-          handleLanguageChange={(l) => { setLanguage(l); saveSettings({language: l}); }}
+          handleLanguageChange={handleLanguageChange}
           autoPlaySound={autoPlaySound}
-          handleAutoPlayChange={(v) => { setAutoPlaySound(v); saveSettings({autoPlaySound: v}); }}
+          handleAutoPlayChange={handleAutoPlayChange}
           activeModes={activeModes}
           handleModeToggle={handleModeToggle}
         />
@@ -167,19 +227,29 @@ function App() {
         <div className="study-view">
           <div className="study-header">
             <button className="back-btn" onClick={() => setView('dashboard')}>✕ Close</button>
-            <div className="progress-text">Word {currentIndex + 1} of {sessionWords.length}</div>
+            <div className="progress-text">Word {currentIndex + 1} of {allWords.length}</div>
           </div>
-          {exerciseType === 'flashcard' && <Flashcard word={currentWord} image={currentImage} onNext={handleNext} speakText={speakText} language={language} />}
-          {exerciseType === 'quiz' && <Quiz word={currentWord} image={currentImage} options={currentOptions} checkAnswer={checkAnswer} speakText={speakText} language={language} feedback={feedback} onNext={handleNext} />}
-          {exerciseType === 'typing' && <Typing word={currentWord} image={currentImage} checkAnswer={checkAnswer} speakText={speakText} language={language} feedback={feedback} onNext={handleNext} />}
+          
+          {exerciseType === 'flashcard' && (
+            <Flashcard word={currentWord} image={currentImage} onNext={handleNext} speakText={speakText} language={language} />
+          )}
+          {exerciseType === 'quiz' && (
+            <Quiz word={currentWord} image={currentImage} options={currentOptions} checkAnswer={checkAnswer} speakText={speakText} language={language} feedback={feedback} />
+          )}
+          {exerciseType === 'typing' && (
+            <Typing word={currentWord} image={currentImage} checkAnswer={checkAnswer} speakText={speakText} language={language} feedback={feedback} />
+          )}
+
           {feedback === 'correct' && <div className="feedback correct">✅ Correct!</div>}
           {feedback === 'wrong' && <div className="feedback wrong">❌ Try again</div>}
         </div>
       )}
 
-      {(view === 'dashboard' || view === 'settings' || view === 'vocabulary') && <BottomNav view={view} setView={setView} />}
+      {(view === 'dashboard' || view === 'settings' || view === 'vocabulary') && (
+        <BottomNav view={view} setView={setView} />
+      )}
     </div>
   )
 }
 
-export default App
+export default App;
