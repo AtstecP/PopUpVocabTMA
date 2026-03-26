@@ -105,30 +105,38 @@ function App() {
     }
   }, [currentWord, view, autoPlaySound]);
   // --- HELPERS ---
-  
-  const speakText = (text, langCode) => {
+
+ const speakText = (text, langCode) => {
   if (!('speechSynthesis' in window)) return;
 
+  // 1. Cancel previous speech
   window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(text);
-  
-  // 1. Set the basic language code
-  const targetLang = langCode === 'fr' ? 'fr-FR' : 'en-US';
-  utterance.lang = targetLang;
-  
-  // 2. TELEGRAM FIX: Manually find a voice that matches the language
-  const voices = window.speechSynthesis.getVoices();
-  const selectedVoice = voices.find(v => v.lang.startsWith(langCode));
-  
-  if (selectedVoice) {
-    utterance.voice = selectedVoice;
+
+  const speak = () => {
+    const voices = window.speechSynthesis.getVoices();
+    const utterance = new SpeechSynthesisUtterance(text);
+    
+    // 2. Exact match for Desktop (e.g., "Google français" or "Microsoft Hortense")
+    const targetLang = langCode === 'fr' ? 'fr-FR' : 'en-US';
+    
+    // 3. Find the best French voice available on your Desktop OS
+    const voice = voices.find(v => v.lang.includes(targetLang) || v.lang.includes('fr'));
+    
+    if (voice) {
+      utterance.voice = voice;
+    }
+    
+    utterance.lang = targetLang;
+    utterance.rate = 0.9;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // 4. Desktop Fix: If voices aren't loaded yet, wait for them
+  if (window.speechSynthesis.getVoices().length === 0) {
+    window.speechSynthesis.onvoiceschanged = speak;
+  } else {
+    speak();
   }
-
-  // 3. Adjust parameters for better clarity in the app
-  utterance.rate = 0.9; 
-  utterance.pitch = 1.0;
-
-  window.speechSynthesis.speak(utterance);
 };
 
   const handleLanguageChange = (l) => {
@@ -142,11 +150,16 @@ function App() {
   };
 
   const handleModeToggle = (modeName) => {
-    const newModes = { ...activeModes, [modeName]: !activeModes[modeName] };
-    if (!newModes.flashcard && !newModes.quiz && !newModes.typing) return;
-    setActiveModes(newModes);
-    saveSettings({ activeModes: newModes });
-  };
+  const newModes = { ...activeModes, [modeName]: !activeModes[modeName] };
+  
+  // Prevent turning off all modes
+  if (!Object.values(newModes).some(val => val)) return;
+
+  setActiveModes(newModes);
+  
+  // This sends the update to your MongoDB
+  saveSettings({ activeModes: newModes });
+};
 
   const saveSettings = (updatedFields) => {
     fetch('/api/user', {
