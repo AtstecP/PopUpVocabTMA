@@ -105,15 +105,31 @@ function App() {
     }
   }, [currentWord, view, autoPlaySound]);
   // --- HELPERS ---
+  
   const speakText = (text, langCode) => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = langCode === 'fr' ? 'fr-FR' : 'en-GB';
-      utterance.rate = 0.9;
-      window.speechSynthesis.speak(utterance);
-    }
-  };
+  if (!('speechSynthesis' in window)) return;
+
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  
+  // 1. Set the basic language code
+  const targetLang = langCode === 'fr' ? 'fr-FR' : 'en-US';
+  utterance.lang = targetLang;
+  
+  // 2. TELEGRAM FIX: Manually find a voice that matches the language
+  const voices = window.speechSynthesis.getVoices();
+  const selectedVoice = voices.find(v => v.lang.startsWith(langCode));
+  
+  if (selectedVoice) {
+    utterance.voice = selectedVoice;
+  }
+
+  // 3. Adjust parameters for better clarity in the app
+  utterance.rate = 0.9; 
+  utterance.pitch = 1.0;
+
+  window.speechSynthesis.speak(utterance);
+};
 
   const handleLanguageChange = (l) => {
     setLanguage(l);
