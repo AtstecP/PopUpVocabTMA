@@ -1,12 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-export default function Flashcard({ word, image, onNext, speakText, language }) {
+export default function Flashcard({ word, image, onNext, speakText, language, autoPlay }) {
   const [flipped, setFlipped] = useState(false);
 
-  const handleFlip = () => {
-    if (!flipped) {
-      speakText(word.definition, 'en');
+  // Auto-play the BACK side when flipped
+  useEffect(() => {
+    if (flipped && autoPlay) {
+      // Small delay to let the animation start before speaking
+      const timer = setTimeout(() => {
+        speakText(word.definition, 'en-US');
+      }, 150);
+      return () => clearTimeout(timer);
     }
+  }, [flipped, autoPlay, word.definition, speakText]);
+
+  const handleFlip = () => {
     setFlipped(!flipped);
   };
 
@@ -18,14 +26,11 @@ export default function Flashcard({ word, image, onNext, speakText, language }) 
 
   return (
     <div className="exercise-container">
-
       <div className="flashcard-scene" onClick={handleFlip}>
         <div className={`flashcard-inner ${flipped ? 'flipped' : ''}`}>
 
           {/* FRONT */}
           <div className="card-face card-front">
-
-            {/* The image is now INSIDE the card with the correct square CSS class */}
             {image && (
               <div className="embedded-image-container">
                 <img src={image} alt="vocabulary visual" className="word-image" />
@@ -34,16 +39,25 @@ export default function Flashcard({ word, image, onNext, speakText, language }) 
 
             <div className="target-word-container">
               <div className="target-word">{word.word}</div>
-              <button className="sound-btn" onClick={(e) => { e.stopPropagation(); speakText(word.word, language); }}>🔊</button>
+              <button className="sound-btn" onClick={(e) => { 
+                e.stopPropagation(); 
+                speakText(word.word, language); 
+              }}>🔊</button>
             </div>
             <p className="hint">Tap to flip</p>
           </div>
 
           {/* BACK */}
           <div className="card-face card-back">
-            <button className="sound-btn small" onClick={(e) => { e.stopPropagation(); speakText(word.definition, 'en'); }}>🔊</button>
+            <button className="sound-btn small" onClick={(e) => { 
+              e.stopPropagation(); 
+              speakText(word.definition, 'en-US'); 
+            }}>🔊</button>
             <div className="target-word-container">
-              <div className="answer-text">{word.definition}</div>
+              {/* Added fontStyle normal to keep your clean look */}
+              <div className="answer-text" style={{ fontStyle: 'normal' }}>
+                {word.definition}
+              </div>
             </div>
           </div>
 

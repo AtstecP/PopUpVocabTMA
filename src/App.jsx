@@ -106,39 +106,58 @@ function App() {
   }, [currentWord, view, autoPlaySound]);
   // --- HELPERS ---
 
- const speakText = (text, langCode) => {
-  if (!('speechSynthesis' in window)) return;
+  const speakText = (text, langCode) => {
+    if (!('speechSynthesis' in window)) return;
 
-  // 1. Cancel previous speech
-  window.speechSynthesis.cancel();
-
-  const speak = () => {
-    const voices = window.speechSynthesis.getVoices();
+    window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    
-    // 2. Exact match for Desktop (e.g., "Google français" or "Microsoft Hortense")
-    const targetLang = langCode === 'fr' ? 'fr-FR' : 'en-US';
-    
-    // 3. Find the best French voice available on your Desktop OS
-    const voice = voices.find(v => v.lang.includes(targetLang) || v.lang.includes('fr'));
-    
-    if (voice) {
-      utterance.voice = voice;
+    const isFrench = langCode === 'fr';
+
+    // 1. Set the intended language string
+    utterance.lang = isFrench ? 'fr-FR' : 'en-US';
+
+    const findAndSetVoice = () => {
+      const voices = window.speechSynthesis.getVoices();
+      const isFrench = langCode === 'fr';
+
+      // 1. Create a priority list for English
+      // We look for "Natural", "Google", or "Enhanced" in the name
+      const englishPriorities = ['natural', 'google', 'premium', 'enhanced', 'apple'];
+
+      let bestVoice = null;
+
+      if (isFrench) {
+        // Priority for French (Premium voices like "Amélie" or "Thomas")
+        bestVoice = voices.find(v => v.lang.includes('fr') &&
+          (v.name.toLowerCase().includes('premium') || v.name.toLowerCase().includes('google')));
+        if (!bestVoice) bestVoice = voices.find(v => v.lang.includes('fr'));
+      } else {
+        // Priority for English (Looking for "Natural" voices first)
+        for (const priority of englishPriorities) {
+          bestVoice = voices.find(v =>
+            v.lang.startsWith('en') && v.name.toLowerCase().includes(priority)
+          );
+          if (bestVoice) break;
+        }
+      }
+
+      if (bestVoice) {
+        utterance.voice = bestVoice;
+      }
+
+      // 2. Adjust these for a more "human" flow
+      utterance.rate = 0.9;  // Slightly slower is more natural
+      utterance.pitch = 1.0;
+      window.speechSynthesis.speak(utterance);
+    };
+
+    // Chrome/Telegram Desktop Fix: wait for voices to load
+    if (window.speechSynthesis.getVoices().length === 0) {
+      window.speechSynthesis.onvoiceschanged = findAndSetVoice;
+    } else {
+      findAndSetVoice();
     }
-    
-    utterance.lang = targetLang;
-    utterance.rate = 0.9;
-    window.speechSynthesis.speak(utterance);
   };
-
-  // 4. Desktop Fix: If voices aren't loaded yet, wait for them
-  if (window.speechSynthesis.getVoices().length === 0) {
-    window.speechSynthesis.onvoiceschanged = speak;
-  } else {
-    speak();
-  }
-};
-
   const handleLanguageChange = (l) => {
     setLanguage(l);
     saveSettings({ language: l });
@@ -150,16 +169,14 @@ function App() {
   };
 
   const handleModeToggle = (modeName) => {
-  const newModes = { ...activeModes, [modeName]: !activeModes[modeName] };
-  
-  // Prevent turning off all modes
-  if (!Object.values(newModes).some(val => val)) return;
+    const newModes = { ...activeModes, [modeName]: !activeModes[modeName] };
 
-  setActiveModes(newModes);
-  
-  // This sends the update to your MongoDB
-  saveSettings({ activeModes: newModes });
-};
+    if (!Object.values(newModes).some(val => val)) return;
+
+    setActiveModes(newModes);
+
+    saveSettings({ activeModes: newModes });
+  };
 
   const saveSettings = (updatedFields) => {
     fetch('/api/user', {
@@ -232,6 +249,7 @@ function App() {
   const checkAnswer = (ans) => {
     if (ans.toLowerCase().trim() === currentWord.word.toLowerCase()) {
       setFeedback('correct');
+      // Ensure 'language' here is 'fr' when studying French words
       if (autoPlaySound) speakText(currentWord.word, language);
       setTimeout(handleNext, 1200);
     } else {
@@ -274,7 +292,14 @@ function App() {
           </div>
 
           {exerciseType === 'flashcard' && (
-            <Flashcard word={currentWord} image={currentImage} onNext={handleNext} speakText={speakText} language={language} />
+            <Flashcard
+              word={currentWord}
+              image={currentImage}
+              onNext={handleNext}
+              speakText={speakText}
+              language={language}
+              autoPlay={autoPlaySound} 
+            />
           )}
           {exerciseType === 'quiz' && (
             <Quiz word={currentWord} image={currentImage} options={currentOptions} checkAnswer={checkAnswer} speakText={speakText} language={language} feedback={feedback} />
